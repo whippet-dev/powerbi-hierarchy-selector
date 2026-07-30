@@ -1,0 +1,17 @@
+{
+		"version": "1.0.0.0",
+		"author": {"name":"Whippet Dev","email":"whippet.dev@gmail.com"},
+		"resources": [
+			{
+				"resourceId": "rId0",
+				"sourceType": 5,
+				"file": "resources/hierarchySelector91C06B93F80548E6A8D87B1480DF361C.pbiviz.json"
+			}
+		],
+		"visual": {"name":"hierarchySelector","displayName":"HierarchySelector","guid":"hierarchySelector91C06B93F80548E6A8D87B1480DF361C","visualClassName":"Visual","version":"1.0.0.0","description":"A modern, flexible visual for navigating and filtering hierarchical data.","supportUrl":"https://github.com/Whippet-Dev/HierarchySelector","gitHubUrl":""},
+		"metadata": {
+			"pbivizjson": {
+				"resourceId": "rId0"
+			}
+		}
+	}
