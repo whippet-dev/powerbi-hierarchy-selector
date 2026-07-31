@@ -10,6 +10,7 @@ import {
 } from "./models/hierarchy";
 import { HierarchyRenderer } from "./rendering/HierarchyRenderer";
 import { HierarchySelection } from "./selection/HierarchySelection";
+import { HierarchyView } from "./view/HierarchyView";
 
 import VisualConstructorOptions =
     powerbi.extensibility.visual.VisualConstructorOptions;
@@ -27,6 +28,7 @@ export class Visual implements IVisual {
     private readonly container: HTMLDivElement;
     private readonly hierarchyTree: HierarchyTree;
     private readonly selection: HierarchySelection;
+    private readonly hierarchyView: HierarchyView;
     private readonly renderer: HierarchyRenderer;
 
     private hierarchyLevels: HierarchyLevel[] = [];
@@ -39,6 +41,7 @@ export class Visual implements IVisual {
 
         this.hierarchyTree = new HierarchyTree();
         this.selection = new HierarchySelection();
+        this.hierarchyView = new HierarchyView();
         this.renderer = new HierarchyRenderer(
             this.container
         );
@@ -90,8 +93,14 @@ export class Visual implements IVisual {
     }
 
     private render(): void {
+        const visibleLevels =
+            this.hierarchyView.getVisibleLevels(
+                this.hierarchyLevels,
+                this.selection
+            );
+
         this.renderer.render(
-            this.hierarchyLevels,
+            visibleLevels,
             this.selection,
             (node) => this.handleNodeSelection(node)
         );

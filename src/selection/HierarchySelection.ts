@@ -13,6 +13,12 @@ export class HierarchySelection {
         this.selectedNodeKeys.clear();
     }
 
+    public getSelectedKey(
+        level: number
+    ): string | undefined {
+        return this.selectedNodeKeys.get(level);
+    }
+
     public isSelected(node: HierarchyNode): boolean {
         return (
             this.selectedNodeKeys.get(node.level) ===
