@@ -7,6 +7,10 @@ export declare class Visual implements IVisual {
     private readonly container;
     constructor(options: VisualConstructorOptions);
     update(options: VisualUpdateOptions): void;
-    private createHierarchyLevel;
+    private buildHierarchy;
+    private getHierarchyLevels;
+    private renderHierarchyLevels;
+    private createValueButton;
+    private formatHierarchyValue;
     private renderLandingPage;
 }

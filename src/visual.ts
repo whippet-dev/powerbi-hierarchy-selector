@@ -15,6 +15,22 @@ import IVisual =
 import DataViewCategoryColumn =
     powerbi.DataViewCategoryColumn;
 
+import PrimitiveValue =
+    powerbi.PrimitiveValue;
+
+interface HierarchyNode {
+    key: string;
+    value: string;
+    level: number;
+    parent: HierarchyNode | null;
+    children: HierarchyNode[];
+}
+
+interface HierarchyLevel {
+    name: string;
+    nodes: HierarchyNode[];
+}
+
 export class Visual implements IVisual {
     private readonly container: HTMLDivElement;
 
@@ -39,59 +55,201 @@ export class Visual implements IVisual {
             return;
         }
 
+        const rootNodes = this.buildHierarchy(categories);
+        const hierarchyLevels = this.getHierarchyLevels(
+            categories,
+            rootNodes
+        );
+
+        this.renderHierarchyLevels(hierarchyLevels);
+    }
+
+    private buildHierarchy(
+        categories: DataViewCategoryColumn[]
+    ): HierarchyNode[] {
+        const rootNodes: HierarchyNode[] = [];
+
+        const rowCount = Math.max(
+            ...categories.map((category) => category.values.length),
+            0
+        );
+
+        for (let rowIndex = 0; rowIndex < rowCount; rowIndex++) {
+            let currentLevelNodes = rootNodes;
+            let parentNode: HierarchyNode | null = null;
+            const pathParts: string[] = [];
+
+            for (
+                let levelIndex = 0;
+                levelIndex < categories.length;
+                levelIndex++
+            ) {
+                const category = categories[levelIndex];
+                const rawValue = category.values[rowIndex];
+                const value = this.formatHierarchyValue(rawValue);
+
+                if (value === null) {
+                    break;
+                }
+
+                pathParts.push(value);
+
+                const key = pathParts.join("||");
+
+                let node = currentLevelNodes.find(
+                    (existingNode) => existingNode.key === key
+                );
+
+                if (!node) {
+                    node = {
+                        key,
+                        value,
+                        level: levelIndex,
+                        parent: parentNode,
+                        children: []
+                    };
+
+                    currentLevelNodes.push(node);
+                }
+
+                parentNode = node;
+                currentLevelNodes = node.children;
+            }
+        }
+
+        return rootNodes;
+    }
+
+    private getHierarchyLevels(
+        categories: DataViewCategoryColumn[],
+        rootNodes: HierarchyNode[]
+    ): HierarchyLevel[] {
+        const levels: HierarchyLevel[] = categories.map(
+            (category, levelIndex) => ({
+                name:
+                    category.source.displayName ||
+                    `Level ${levelIndex + 1}`,
+                nodes: []
+            })
+        );
+
+        const visitNode = (node: HierarchyNode): void => {
+            levels[node.level]?.nodes.push(node);
+
+            for (const child of node.children) {
+                visitNode(child);
+            }
+        };
+
+        for (const rootNode of rootNodes) {
+            visitNode(rootNode);
+        }
+
+        for (const level of levels) {
+            level.nodes.sort((first, second) =>
+                first.value.localeCompare(second.value)
+            );
+        }
+
+        return levels;
+    }
+
+    private renderHierarchyLevels(
+        hierarchyLevels: HierarchyLevel[]
+    ): void {
         const fragment = document.createDocumentFragment();
 
-        for (const category of categories) {
-            const levelName =
-                category.source.displayName || "Hierarchy level";
+        for (const hierarchyLevel of hierarchyLevels) {
+            const levelElement = document.createElement("section");
+            levelElement.className = "hierarchy-level";
 
-            const level = this.createHierarchyLevel(levelName);
-            fragment.appendChild(level);
+            const heading = document.createElement("div");
+            heading.className = "hierarchy-level__label";
+            heading.textContent = hierarchyLevel.name;
+            heading.title = hierarchyLevel.name;
+
+            const valuesContainer = document.createElement("div");
+            valuesContainer.className =
+                "hierarchy-level__values";
+
+            if (hierarchyLevel.nodes.length === 0) {
+                const emptyMessage = document.createElement("div");
+                emptyMessage.className =
+                    "hierarchy-level__empty";
+                emptyMessage.textContent = "No values";
+
+                valuesContainer.appendChild(emptyMessage);
+            } else {
+                for (const node of hierarchyLevel.nodes) {
+                    const valueButton =
+                        this.createValueButton(node);
+
+                    valuesContainer.appendChild(valueButton);
+                }
+            }
+
+            levelElement.appendChild(heading);
+            levelElement.appendChild(valuesContainer);
+            fragment.appendChild(levelElement);
         }
 
         this.container.appendChild(fragment);
     }
 
-    private createHierarchyLevel(levelName: string): HTMLDivElement {
-        const level = document.createElement("div");
-        level.className = "hierarchy-level";
-
-        const label = document.createElement("div");
-        label.className = "hierarchy-level__label";
-        label.textContent = levelName;
-        label.title = levelName;
-
+    private createValueButton(
+        node: HierarchyNode
+    ): HTMLButtonElement {
         const button = document.createElement("button");
-        button.className = "hierarchy-level__button";
+
+        button.className = "hierarchy-level__value";
         button.type = "button";
-        button.textContent = "Select";
+        button.textContent = node.value;
+        button.title = node.value;
+
+        button.dataset.nodeKey = node.key;
+        button.dataset.level = node.level.toString();
+
         button.setAttribute(
             "aria-label",
-            `Select values for ${levelName}`
+            `Select ${node.value}`
         );
 
-        level.appendChild(label);
-        level.appendChild(button);
+        return button;
+    }
 
-        return level;
+    private formatHierarchyValue(
+        value: PrimitiveValue
+    ): string | null {
+        if (value === null || value === undefined) {
+            return null;
+        }
+
+        const formattedValue = String(value).trim();
+
+        return formattedValue.length > 0
+            ? formattedValue
+            : null;
     }
 
     private renderLandingPage(): void {
-    const landingPage = document.createElement("div");
-    landingPage.className = "hierarchy-selector__landing-page";
+        const landingPage = document.createElement("div");
+        landingPage.className =
+            "hierarchy-selector__landing-page";
 
-    const heading = document.createElement("div");
-    heading.className = "hierarchy-selector__landing-heading";
-    heading.textContent = "Build a hierarchy";
+        const heading = document.createElement("div");
+        heading.className =
+            "hierarchy-selector__landing-heading";
+        heading.textContent = "Build a hierarchy";
 
-    const instructions = document.createElement("div");
-    instructions.className = "hierarchy-selector__landing-text";
-    instructions.textContent =
-        "Add fields to Hierarchy levels.";
+        const instructions = document.createElement("div");
+        instructions.className =
+            "hierarchy-selector__landing-text";
+        instructions.textContent =
+            "Add fields to Hierarchy levels.";
 
-    landingPage.appendChild(heading);
-    landingPage.appendChild(instructions);
+        landingPage.appendChild(heading);
+        landingPage.appendChild(instructions);
 
-    this.container.appendChild(landingPage);
-}
+        this.container.appendChild(landingPage);
+    }
 }
