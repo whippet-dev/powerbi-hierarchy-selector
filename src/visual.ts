@@ -1,6 +1,9 @@
 "use strict";
 
 import powerbi from "powerbi-visuals-api";
+import {
+    PrimitiveValueType
+} from "powerbi-models";
 import "../style/visual.less";
 
 import { HierarchyFilterService } from "./filtering/HierarchyFilterService";
@@ -36,6 +39,14 @@ export class Visual implements IVisual {
     private hierarchyLevels: HierarchyLevel[] = [];
     private categories: DataViewCategoryColumn[] = [];
 
+    /*
+     * undefined means there is no local filter update awaiting confirmation.
+     * null means a local filter clear is awaiting confirmation.
+     * An array means a local hierarchy filter is awaiting confirmation.
+     */
+    private pendingFilterValues:
+        PrimitiveValueType[] | null | undefined;
+
     public constructor(options: VisualConstructorOptions) {
         this.container = document.createElement("div");
         this.container.className = "hierarchy-selector";
@@ -45,9 +56,11 @@ export class Visual implements IVisual {
         this.hierarchyTree = new HierarchyTree();
         this.selection = new HierarchySelection();
         this.hierarchyView = new HierarchyView();
+
         this.renderer = new HierarchyRenderer(
             this.container
         );
+
         this.filterService =
             new HierarchyFilterService(options.host);
     }
@@ -64,6 +77,7 @@ export class Visual implements IVisual {
 
         if (this.categories.length === 0) {
             this.hierarchyLevels = [];
+            this.pendingFilterValues = undefined;
             this.selection.clear();
 
             this.renderer.renderLandingPage();
@@ -79,9 +93,44 @@ export class Visual implements IVisual {
                 rootNodes
             );
 
-        this.selection.removeInvalidSelections(
-            this.hierarchyLevels
-        );
+        const filterValues =
+            this.filterService.readSelectedValues(
+                options.jsonFilters,
+                this.categories
+            );
+
+        if (this.pendingFilterValues !== undefined) {
+            /*
+             * A click has changed the local selection. Keep that selection
+             * until Power BI returns the matching filter in jsonFilters.
+             */
+            if (
+                this.areFilterValuesEqual(
+                    filterValues,
+                    this.pendingFilterValues
+                )
+            ) {
+                this.pendingFilterValues = undefined;
+
+                this.selection.synchronizeFromValues(
+                    this.hierarchyLevels,
+                    filterValues
+                );
+            } else {
+                this.selection.removeInvalidSelections(
+                    this.hierarchyLevels
+                );
+            }
+        } else {
+            /*
+             * No local filter change is pending, so this is report load,
+             * reset filters, bookmark restoration or another host update.
+             */
+            this.selection.synchronizeFromValues(
+                this.hierarchyLevels,
+                filterValues
+            );
+        }
 
         this.render();
     }
@@ -98,6 +147,16 @@ export class Visual implements IVisual {
             this.selection.getSelectedPath(
                 this.hierarchyLevels
             );
+
+        const selectedValues =
+            this.filterService.getSelectedValues(
+                selectedPath
+            );
+
+        this.pendingFilterValues =
+            selectedValues.length > 0
+                ? selectedValues
+                : null;
 
         this.render();
 
@@ -118,6 +177,30 @@ export class Visual implements IVisual {
             visibleLevels,
             this.selection,
             (node) => this.handleNodeSelection(node)
+        );
+    }
+
+    private areFilterValuesEqual(
+        firstValues: PrimitiveValueType[] | null,
+        secondValues: PrimitiveValueType[] | null
+    ): boolean {
+        if (
+            firstValues === null ||
+            secondValues === null
+        ) {
+            return firstValues === secondValues;
+        }
+
+        if (
+            firstValues.length !==
+            secondValues.length
+        ) {
+            return false;
+        }
+
+        return firstValues.every(
+            (value, index) =>
+                value === secondValues[index]
         );
     }
 }

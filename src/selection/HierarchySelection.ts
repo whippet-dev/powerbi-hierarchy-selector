@@ -1,6 +1,10 @@
 "use strict";
 
 import {
+    PrimitiveValueType
+} from "powerbi-models";
+
+import {
     HierarchyLevel,
     HierarchyNode
 } from "../models/hierarchy";
@@ -38,7 +42,8 @@ export class HierarchySelection {
 
             const selectedNode =
                 levels[levelIndex]?.nodes.find(
-                    (node) => node.key === selectedKey
+                    (node) =>
+                        node.key === selectedKey
                 );
 
             if (!selectedNode) {
@@ -63,9 +68,14 @@ export class HierarchySelection {
         levelCount: number
     ): void {
         const currentlySelectedKey =
-            this.selectedNodeKeys.get(selectedNode.level);
+            this.selectedNodeKeys.get(
+                selectedNode.level
+            );
 
-        if (currentlySelectedKey === selectedNode.key) {
+        if (
+            currentlySelectedKey ===
+            selectedNode.key
+        ) {
             this.clearFromLevel(
                 selectedNode.level,
                 levelCount
@@ -92,6 +102,64 @@ export class HierarchySelection {
         }
     }
 
+    public synchronizeFromValues(
+        levels: HierarchyLevel[],
+        selectedValues: PrimitiveValueType[] | null
+    ): void {
+        this.clear();
+
+        if (
+            selectedValues === null ||
+            selectedValues.length === 0 ||
+            selectedValues.length > levels.length
+        ) {
+            return;
+        }
+
+        let selectedParent:
+            HierarchyNode | null = null;
+
+        for (
+            let levelIndex = 0;
+            levelIndex < selectedValues.length;
+            levelIndex++
+        ) {
+            const selectedValue =
+                selectedValues[levelIndex];
+
+            const selectedNode =
+                levels[levelIndex]?.nodes.find(
+                    (node) => {
+                        const parentMatches =
+                            levelIndex === 0
+                                ? node.parent === null
+                                : node.parent?.key ===
+                                    selectedParent?.key;
+
+                        return (
+                            parentMatches &&
+                            this.nodeMatchesValue(
+                                node,
+                                selectedValue
+                            )
+                        );
+                    }
+                );
+
+            if (!selectedNode) {
+                this.clear();
+                return;
+            }
+
+            this.selectedNodeKeys.set(
+                levelIndex,
+                selectedNode.key
+            );
+
+            selectedParent = selectedNode;
+        }
+    }
+
     public removeInvalidSelections(
         levels: HierarchyLevel[]
     ): void {
@@ -104,12 +172,18 @@ export class HierarchySelection {
         }
 
         const selectedLevels =
-            Array.from(this.selectedNodeKeys.keys())
-                .sort((first, second) => first - second);
+            Array.from(
+                this.selectedNodeKeys.keys()
+            ).sort(
+                (first, second) =>
+                    first - second
+            );
 
         for (const levelIndex of selectedLevels) {
             const selectedKey =
-                this.selectedNodeKeys.get(levelIndex);
+                this.selectedNodeKeys.get(
+                    levelIndex
+                );
 
             if (
                 selectedKey === undefined ||
@@ -123,6 +197,20 @@ export class HierarchySelection {
                 break;
             }
         }
+    }
+
+    private nodeMatchesValue(
+        node: HierarchyNode,
+        selectedValue: PrimitiveValueType
+    ): boolean {
+        if (node.rawValue instanceof Date) {
+            return (
+                node.rawValue.toISOString() ===
+                selectedValue
+            );
+        }
+
+        return node.rawValue === selectedValue;
     }
 
     private clearFromLevel(
