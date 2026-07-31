@@ -4,19 +4,19 @@ import powerbi from "powerbi-visuals-api";
 import "../style/visual.less";
 
 import VisualConstructorOptions =
-powerbi.extensibility.visual.VisualConstructorOptions;
+    powerbi.extensibility.visual.VisualConstructorOptions;
 
 import VisualUpdateOptions =
-powerbi.extensibility.visual.VisualUpdateOptions;
+    powerbi.extensibility.visual.VisualUpdateOptions;
 
 import IVisual =
-powerbi.extensibility.visual.IVisual;
+    powerbi.extensibility.visual.IVisual;
 
 import DataViewCategoryColumn =
-powerbi.DataViewCategoryColumn;
+    powerbi.DataViewCategoryColumn;
 
 import PrimitiveValue =
-powerbi.PrimitiveValue;
+    powerbi.PrimitiveValue;
 
 interface HierarchyNode {
     key: string;
@@ -34,6 +34,20 @@ interface HierarchyLevel {
 export class Visual implements IVisual {
     private readonly container: HTMLDivElement;
 
+    private rootNodes: HierarchyNode[] = [];
+    private hierarchyLevels: HierarchyLevel[] = [];
+
+    /**
+     * Stores the selected node key for each hierarchy level.
+     *
+     * Example:
+     * 0 -> "Europe"
+     * 1 -> "Europe||United Kingdom"
+     * 2 -> "Europe||United Kingdom||Yorkshire"
+     */
+    private readonly selectedNodeKeys: Map<number, string> =
+        new Map<number, string>();
+
     public constructor(options: VisualConstructorOptions) {
         this.container = document.createElement("div");
         this.container.className = "hierarchy-selector";
@@ -42,26 +56,33 @@ export class Visual implements IVisual {
     }
 
     public update(options: VisualUpdateOptions): void {
-        this.container.innerHTML = "";
+        this.container.style.width =
+            `${options.viewport.width}px`;
 
-        this.container.style.width = `${options.viewport.width}px`;
-        this.container.style.height = `${options.viewport.height}px`;
+        this.container.style.height =
+            `${options.viewport.height}px`;
 
         const categories: DataViewCategoryColumn[] =
             options.dataViews?.[0]?.categorical?.categories ?? [];
 
         if (categories.length === 0) {
+            this.rootNodes = [];
+            this.hierarchyLevels = [];
+            this.selectedNodeKeys.clear();
+
             this.renderLandingPage();
             return;
         }
 
-        const rootNodes = this.buildHierarchy(categories);
-        const hierarchyLevels = this.getHierarchyLevels(
+        this.rootNodes = this.buildHierarchy(categories);
+
+        this.hierarchyLevels = this.getHierarchyLevels(
             categories,
-            rootNodes
+            this.rootNodes
         );
 
-        this.renderHierarchyLevels(hierarchyLevels);
+        this.removeInvalidSelections();
+        this.render();
     }
 
     private buildHierarchy(
@@ -70,13 +91,20 @@ export class Visual implements IVisual {
         const rootNodes: HierarchyNode[] = [];
 
         const rowCount = Math.max(
-            ...categories.map((category) => category.values.length),
+            ...categories.map(
+                (category) => category.values.length
+            ),
             0
         );
 
-        for (let rowIndex = 0; rowIndex < rowCount; rowIndex++) {
+        for (
+            let rowIndex = 0;
+            rowIndex < rowCount;
+            rowIndex++
+        ) {
             let currentLevelNodes = rootNodes;
             let parentNode: HierarchyNode | null = null;
+
             const pathParts: string[] = [];
 
             for (
@@ -86,7 +114,9 @@ export class Visual implements IVisual {
             ) {
                 const category = categories[levelIndex];
                 const rawValue = category.values[rowIndex];
-                const value = this.formatHierarchyValue(rawValue);
+
+                const value =
+                    this.formatHierarchyValue(rawValue);
 
                 if (value === null) {
                     break;
@@ -97,7 +127,8 @@ export class Visual implements IVisual {
                 const key = pathParts.join("||");
 
                 let node = currentLevelNodes.find(
-                    (existingNode) => existingNode.key === key
+                    (existingNode) =>
+                        existingNode.key === key
                 );
 
                 if (!node) {
@@ -154,42 +185,144 @@ export class Visual implements IVisual {
         return levels;
     }
 
-    private renderHierarchyLevels(
-        hierarchyLevels: HierarchyLevel[]
+    private handleNodeSelection(
+        selectedNode: HierarchyNode
     ): void {
-        const fragment = document.createDocumentFragment();
+        const currentlySelectedKey =
+            this.selectedNodeKeys.get(selectedNode.level);
 
-        for (const hierarchyLevel of hierarchyLevels) {
-            const levelElement = document.createElement("section");
+        /*
+         * Clicking the selected node again clears that
+         * level and every level beneath it.
+         */
+        if (currentlySelectedKey === selectedNode.key) {
+            this.clearSelectionsFromLevel(
+                selectedNode.level
+            );
+
+            this.render();
+            return;
+        }
+
+        /*
+         * Changing a selection invalidates everything
+         * below that level.
+         */
+        this.clearSelectionsFromLevel(
+            selectedNode.level
+        );
+
+        /*
+         * Selecting a lower-level node also selects its
+         * complete ancestor path, keeping state valid.
+         */
+        let currentNode: HierarchyNode | null =
+            selectedNode;
+
+        while (currentNode !== null) {
+            this.selectedNodeKeys.set(
+                currentNode.level,
+                currentNode.key
+            );
+
+            currentNode = currentNode.parent;
+        }
+
+        this.render();
+    }
+
+    private clearSelectionsFromLevel(
+        startingLevel: number
+    ): void {
+        for (
+            let levelIndex = startingLevel;
+            levelIndex < this.hierarchyLevels.length;
+            levelIndex++
+        ) {
+            this.selectedNodeKeys.delete(levelIndex);
+        }
+    }
+
+    private removeInvalidSelections(): void {
+        const availableNodeKeys = new Set<string>();
+
+        for (const level of this.hierarchyLevels) {
+            for (const node of level.nodes) {
+                availableNodeKeys.add(node.key);
+            }
+        }
+
+        const selectedLevels =
+            Array.from(this.selectedNodeKeys.keys())
+                .sort((first, second) => first - second);
+
+        for (const levelIndex of selectedLevels) {
+            const selectedKey =
+                this.selectedNodeKeys.get(levelIndex);
+
+            if (
+                selectedKey === undefined ||
+                !availableNodeKeys.has(selectedKey)
+            ) {
+                this.clearSelectionsFromLevel(
+                    levelIndex
+                );
+
+                break;
+            }
+        }
+    }
+
+    private render(): void {
+        this.container.replaceChildren();
+
+        const fragment =
+            document.createDocumentFragment();
+
+        for (const hierarchyLevel of this.hierarchyLevels) {
+            const levelElement =
+                document.createElement("section");
+
             levelElement.className = "hierarchy-level";
 
-            const heading = document.createElement("div");
-            heading.className = "hierarchy-level__label";
+            const heading =
+                document.createElement("div");
+
+            heading.className =
+                "hierarchy-level__label";
+
             heading.textContent = hierarchyLevel.name;
             heading.title = hierarchyLevel.name;
 
-            const valuesContainer = document.createElement("div");
+            const valuesContainer =
+                document.createElement("div");
+
             valuesContainer.className =
                 "hierarchy-level__values";
 
             if (hierarchyLevel.nodes.length === 0) {
-                const emptyMessage = document.createElement("div");
+                const emptyMessage =
+                    document.createElement("div");
+
                 emptyMessage.className =
                     "hierarchy-level__empty";
+
                 emptyMessage.textContent = "No values";
 
-                valuesContainer.appendChild(emptyMessage);
+                valuesContainer.appendChild(
+                    emptyMessage
+                );
             } else {
                 for (const node of hierarchyLevel.nodes) {
-                    const valueButton =
-                        this.createValueButton(node);
-
-                    valuesContainer.appendChild(valueButton);
+                    valuesContainer.appendChild(
+                        this.createValueButton(node)
+                    );
                 }
             }
 
             levelElement.appendChild(heading);
             levelElement.appendChild(valuesContainer);
+
             fragment.appendChild(levelElement);
         }
 
@@ -199,7 +332,12 @@ export class Visual implements IVisual {
     private createValueButton(
         node: HierarchyNode
     ): HTMLButtonElement {
-        const button = document.createElement("button");
+        const button =
+            document.createElement("button");
+
+        const isSelected =
+            this.selectedNodeKeys.get(node.level) ===
+            node.key;
 
         button.className = "hierarchy-level__value";
         button.type = "button";
@@ -211,7 +349,25 @@ export class Visual implements IVisual {
 
         button.setAttribute(
             "aria-label",
-            `Select ${node.value}`
+            isSelected
+                ? `Deselect ${node.value}`
+                : `Select ${node.value}`
+        );
+
+        button.setAttribute(
+            "aria-pressed",
+            String(isSelected)
+        );
+
+        if (isSelected) {
+            button.classList.add(
+                "hierarchy-level__value--selected"
+            );
+        }
+
+        button.addEventListener(
+            "click",
+            () => this.handleNodeSelection(node)
         );
 
         return button;
@@ -232,18 +388,28 @@ export class Visual implements IVisual {
     }
 
     private renderLandingPage(): void {
-        const landingPage = document.createElement("div");
+        this.container.replaceChildren();
+
+        const landingPage =
+            document.createElement("div");
+
         landingPage.className =
             "hierarchy-selector__landing-page";
 
-        const heading = document.createElement("div");
+        const heading =
+            document.createElement("div");
+
         heading.className =
             "hierarchy-selector__landing-heading";
+
         heading.textContent = "Build a hierarchy";
 
-        const instructions = document.createElement("div");
+        const instructions =
+            document.createElement("div");
+
         instructions.className =
             "hierarchy-selector__landing-text";
+
         instructions.textContent =
             "Add fields to Hierarchy levels.";
 
