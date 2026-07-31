@@ -1,0 +1,16 @@
+# Dependencies
+node_modules/
+
+# Power BI build output
+dist/
+.tmp/
+
+# Generated build reports
+webpack.statistics*.html
+
+# Logs
+*.log
+
+# Operating system files
+.DS_Store
+Thumbs.db
