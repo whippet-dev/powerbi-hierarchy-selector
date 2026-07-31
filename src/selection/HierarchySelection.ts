@@ -19,6 +19,38 @@ export class HierarchySelection {
         return this.selectedNodeKeys.get(level);
     }
 
+    public getSelectedPath(
+        levels: HierarchyLevel[]
+    ): HierarchyNode[] {
+        const selectedPath: HierarchyNode[] = [];
+
+        for (
+            let levelIndex = 0;
+            levelIndex < levels.length;
+            levelIndex++
+        ) {
+            const selectedKey =
+                this.selectedNodeKeys.get(levelIndex);
+
+            if (!selectedKey) {
+                break;
+            }
+
+            const selectedNode =
+                levels[levelIndex]?.nodes.find(
+                    (node) => node.key === selectedKey
+                );
+
+            if (!selectedNode) {
+                break;
+            }
+
+            selectedPath.push(selectedNode);
+        }
+
+        return selectedPath;
+    }
+
     public isSelected(node: HierarchyNode): boolean {
         return (
             this.selectedNodeKeys.get(node.level) ===

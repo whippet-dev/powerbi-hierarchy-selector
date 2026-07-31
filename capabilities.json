@@ -6,7 +6,18 @@
             "kind": "Grouping"
         }
     ],
-    "objects": {},
+    "objects": {
+        "general": {
+            "displayName": "General",
+            "properties": {
+                "filter": {
+                    "type": {
+                        "filter": true
+                    }
+                }
+            }
+        }
+    },
     "dataViewMappings": [
         {
             "conditions": [

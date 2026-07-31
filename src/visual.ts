@@ -3,6 +3,7 @@
 import powerbi from "powerbi-visuals-api";
 import "../style/visual.less";
 
+import { HierarchyFilterService } from "./filtering/HierarchyFilterService";
 import { HierarchyTree } from "./hierarchy/HierarchyTree";
 import {
     HierarchyLevel,
@@ -30,8 +31,10 @@ export class Visual implements IVisual {
     private readonly selection: HierarchySelection;
     private readonly hierarchyView: HierarchyView;
     private readonly renderer: HierarchyRenderer;
+    private readonly filterService: HierarchyFilterService;
 
     private hierarchyLevels: HierarchyLevel[] = [];
+    private categories: DataViewCategoryColumn[] = [];
 
     public constructor(options: VisualConstructorOptions) {
         this.container = document.createElement("div");
@@ -45,6 +48,8 @@ export class Visual implements IVisual {
         this.renderer = new HierarchyRenderer(
             this.container
         );
+        this.filterService =
+            new HierarchyFilterService(options.host);
     }
 
     public update(options: VisualUpdateOptions): void {
@@ -54,10 +59,10 @@ export class Visual implements IVisual {
         this.container.style.height =
             `${options.viewport.height}px`;
 
-        const categories: DataViewCategoryColumn[] =
+        this.categories =
             options.dataViews?.[0]?.categorical?.categories ?? [];
 
-        if (categories.length === 0) {
+        if (this.categories.length === 0) {
             this.hierarchyLevels = [];
             this.selection.clear();
 
@@ -66,11 +71,11 @@ export class Visual implements IVisual {
         }
 
         const rootNodes =
-            this.hierarchyTree.build(categories);
+            this.hierarchyTree.build(this.categories);
 
         this.hierarchyLevels =
             this.hierarchyTree.getLevels(
-                categories,
+                this.categories,
                 rootNodes
             );
 
@@ -89,7 +94,17 @@ export class Visual implements IVisual {
             this.hierarchyLevels.length
         );
 
+        const selectedPath =
+            this.selection.getSelectedPath(
+                this.hierarchyLevels
+            );
+
         this.render();
+
+        this.filterService.apply(
+            this.categories,
+            selectedPath
+        );
     }
 
     private render(): void {

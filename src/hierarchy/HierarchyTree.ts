@@ -63,6 +63,7 @@ export class HierarchyTree {
                     node = {
                         key,
                         value,
+                        rawValue,
                         level: levelIndex,
                         parent: parentNode,
                         children: []
