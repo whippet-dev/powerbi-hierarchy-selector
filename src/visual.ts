@@ -4,19 +4,19 @@ import powerbi from "powerbi-visuals-api";
 import "../style/visual.less";
 
 import VisualConstructorOptions =
-    powerbi.extensibility.visual.VisualConstructorOptions;
+powerbi.extensibility.visual.VisualConstructorOptions;
 
 import VisualUpdateOptions =
-    powerbi.extensibility.visual.VisualUpdateOptions;
+powerbi.extensibility.visual.VisualUpdateOptions;
 
 import IVisual =
-    powerbi.extensibility.visual.IVisual;
+powerbi.extensibility.visual.IVisual;
 
 import DataViewCategoryColumn =
-    powerbi.DataViewCategoryColumn;
+powerbi.DataViewCategoryColumn;
 
 import PrimitiveValue =
-    powerbi.PrimitiveValue;
+powerbi.PrimitiveValue;
 
 interface HierarchyNode {
     key: string;
