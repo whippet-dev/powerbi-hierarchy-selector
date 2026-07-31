@@ -1,0 +1,31 @@
+Continent,Country,Region,City,Site
+Europe,United Kingdom,Yorkshire,Sheffield,Sheffield Office
+Europe,United Kingdom,Yorkshire,Leeds,Leeds Office
+Europe,United Kingdom,North West,Manchester,Manchester Office
+Europe,France,Île-de-France,Paris,Paris HQ
+Europe,Germany,Bavaria,Munich,Munich Office
+Europe,Spain,Catalonia,Barcelona,Barcelona Office
+North America,United States,California,Los Angeles,LA Office
+North America,United States,New York,New York,NYC Office
+North America,Canada,Ontario,Toronto,Toronto Office
+Asia,Japan,Kantō,Tokyo,Tokyo Office
+Asia,Japan,Kansai,Osaka,Osaka Office
+Asia,India,Maharashtra,Mumbai,Mumbai Office
+Oceania,Australia,New South Wales,Sydney,Sydney Office
+South America,Brazil,São Paulo,São Paulo,São Paulo Office
+Africa,South Africa,Gauteng,Johannesburg,Johannesburg Office
+Europe,United Kingdom,Yorkshire,Sheffield,Sheffield Warehouse
+Europe,United Kingdom,Yorkshire,Sheffield,Sheffield DC
+Europe,France,Île-de-France,Paris,Paris Distribution
+North America,Canada,Ontario,Ottawa,Ottawa Office
+Asia,India,Delhi,New Delhi,Delhi Office
+Europe,Germany,Berlin,Berlin,Berlin Office
+Europe,Italy,Lazio,Rome,Rome Office
+Europe,Netherlands,North Holland,Amsterdam,Amsterdam Office
+Europe,Portugal,Lisbon,Lisbon,Lisbon Office
+Europe,Ireland,Leinster,Dublin,Dublin Office
+Europe,Sweden,Stockholm,Stockholm,Stockholm Office
+Asia,Singapore,Central,Singapore,Singapore HQ
+Asia,China,Guangdong,Shenzhen,Shenzhen Office
+North America,Mexico,Jalisco,Guadalajara,Guadalajara Office
+South America,Argentina,Buenos Aires,Buenos Aires,Buenos Aires Office
