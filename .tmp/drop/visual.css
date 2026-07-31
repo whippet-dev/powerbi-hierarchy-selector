@@ -45,4 +45,27 @@
   outline: 2px solid currentColor;
   outline-offset: 2px;
 }
+.hierarchy-selector__landing-page {
+  box-sizing: border-box;
+  display: flex;
+  width: 100%;
+  height: 100%;
+  min-height: 100px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  text-align: center;
+}
+.hierarchy-selector__landing-heading {
+  margin-bottom: 6px;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 22px;
+}
+.hierarchy-selector__landing-text {
+  max-width: 300px;
+  font-size: 12px;
+  line-height: 18px;
+}
 

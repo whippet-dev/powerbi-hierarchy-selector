@@ -1,79 +1,36 @@
 {
     "dataRoles": [
         {
-            "displayName": "Category Data",
-            "name": "category",
+            "displayName": "Hierarchy levels",
+            "name": "hierarchy",
             "kind": "Grouping"
-        },
-        {
-            "displayName": "Measure Data",
-            "name": "measure",
-            "kind": "Measure"
         }
     ],
-    "objects": {
-        "dataPoint": {
-            "properties": {
-                "defaultColor": {
-                    "type": {
-                        "fill": {
-                            "solid": {
-                                "color": true
-                            }
-                        }
-                    }
-                },
-                "showAllDataPoints": {
-                    "type": {
-                        "bool": true
-                    }
-                },
-                "fill": {
-                    "type": {
-                        "fill": {
-                            "solid": {
-                                "color": true
-                            }
-                        }
-                    }
-                },
-                "fillRule": {
-                    "type": {
-                        "fill": {}
-                    }
-                },
-                 "fontSize": {
-                    "type": {
-                        "formatting": {
-                            "fontSize": true
-                        }
-                    }
-                }
-            }
-        }
-    },
+    "objects": {},
     "dataViewMappings": [
         {
+            "conditions": [
+                {
+                    "hierarchy": {
+                        "min": 1
+                    }
+                }
+            ],
             "categorical": {
                 "categories": {
                     "for": {
-                        "in": "category"
+                        "in": "hierarchy"
                     },
                     "dataReductionAlgorithm": {
-                        "top": {}
-                    }
-                },
-                "values": {
-                    "select": [
-                        {
-                            "bind": {
-                                "to": "measure"
-                            }
+                        "window": {
+                            "count": 10000
                         }
-                    ]
+                    }
                 }
             }
         }
     ],
+    "supportsLandingPage": true,
+"supportsEmptyDataView": true,
     "privileges": []
 }
