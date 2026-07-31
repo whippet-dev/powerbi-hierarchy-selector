@@ -17,6 +17,19 @@ export class HierarchySelection {
         this.selectedNodeKeys.clear();
     }
 
+    public clearFromLevel(
+        startingLevel: number,
+        levelCount: number
+    ): void {
+        for (
+            let levelIndex = startingLevel;
+            levelIndex < levelCount;
+            levelIndex++
+        ) {
+            this.selectedNodeKeys.delete(levelIndex);
+        }
+    }
+
     public getSelectedKey(
         level: number
     ): string | undefined {
@@ -211,18 +224,5 @@ export class HierarchySelection {
         }
 
         return node.rawValue === selectedValue;
-    }
-
-    private clearFromLevel(
-        startingLevel: number,
-        levelCount: number
-    ): void {
-        for (
-            let levelIndex = startingLevel;
-            levelIndex < levelCount;
-            levelIndex++
-        ) {
-            this.selectedNodeKeys.delete(levelIndex);
-        }
     }
 }

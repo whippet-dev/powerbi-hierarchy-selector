@@ -14,18 +14,73 @@ export class HierarchyRenderer {
     public render(
         hierarchyLevels: HierarchyLevel[],
         selection: HierarchySelection,
-        onNodeSelection: (node: HierarchyNode) => void
+        onNodeSelection: (node: HierarchyNode) => void,
+        onClearAll: () => void,
+        onLevelClear: (levelIndex: number) => void
     ): void {
         this.container.replaceChildren();
 
-        const fragment =
-            document.createDocumentFragment();
+        const hasSelection =
+            selection.getSelectedPath(
+                hierarchyLevels
+            ).length > 0;
 
-        for (const hierarchyLevel of hierarchyLevels) {
+        const toolbar =
+            document.createElement("div");
+
+        toolbar.className =
+            "hierarchy-selector__toolbar";
+
+        const clearAllButton =
+            document.createElement("button");
+
+        clearAllButton.className =
+            "hierarchy-selector__clear-all";
+
+        clearAllButton.type = "button";
+        clearAllButton.textContent = "Clear all";
+        clearAllButton.title =
+            "Clear all hierarchy selections";
+
+        clearAllButton.disabled = !hasSelection;
+
+        clearAllButton.setAttribute(
+            "aria-label",
+            "Clear all hierarchy selections"
+        );
+
+        clearAllButton.addEventListener(
+            "click",
+            onClearAll
+        );
+
+        toolbar.appendChild(clearAllButton);
+
+        const levelsContainer =
+            document.createElement("div");
+
+        levelsContainer.className =
+            "hierarchy-selector__levels";
+
+        for (
+            let levelIndex = 0;
+            levelIndex < hierarchyLevels.length;
+            levelIndex++
+        ) {
+            const hierarchyLevel =
+                hierarchyLevels[levelIndex];
+
             const levelElement =
                 document.createElement("section");
 
-            levelElement.className = "hierarchy-level";
+            levelElement.className =
+                "hierarchy-level";
+
+            const header =
+                document.createElement("div");
+
+            header.className =
+                "hierarchy-level__header";
 
             const heading =
                 document.createElement("div");
@@ -35,6 +90,41 @@ export class HierarchyRenderer {
 
             heading.textContent = hierarchyLevel.name;
             heading.title = hierarchyLevel.name;
+
+            header.appendChild(heading);
+
+            const selectedKey =
+                selection.getSelectedKey(levelIndex);
+
+            if (selectedKey !== undefined) {
+                const clearLevelButton =
+                    document.createElement("button");
+
+                const accessibleLabel =
+                    `Clear ${hierarchyLevel.name} selection`;
+
+                clearLevelButton.className =
+                    "hierarchy-level__clear";
+
+                clearLevelButton.type = "button";
+                clearLevelButton.textContent = "×";
+                clearLevelButton.title =
+                    accessibleLabel;
+
+                clearLevelButton.setAttribute(
+                    "aria-label",
+                    accessibleLabel
+                );
+
+                clearLevelButton.addEventListener(
+                    "click",
+                    () => onLevelClear(levelIndex)
+                );
+
+                header.appendChild(
+                    clearLevelButton
+                );
+            }
 
             const valuesContainer =
                 document.createElement("div");
@@ -66,13 +156,14 @@ export class HierarchyRenderer {
                 }
             }
 
-            levelElement.appendChild(heading);
+            levelElement.appendChild(header);
             levelElement.appendChild(valuesContainer);
 
-            fragment.appendChild(levelElement);
+            levelsContainer.appendChild(levelElement);
         }
 
-        this.container.appendChild(fragment);
+        this.container.appendChild(toolbar);
+        this.container.appendChild(levelsContainer);
     }
 
     public renderLandingPage(): void {

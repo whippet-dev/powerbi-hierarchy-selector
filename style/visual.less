@@ -1,13 +1,59 @@
 .hierarchy-selector {
     box-sizing: border-box;
     display: flex;
-    align-items: stretch;
-    gap: 12px;
     width: 100%;
     height: 100%;
+    min-height: 0;
+    flex-direction: column;
+    gap: 6px;
     padding: 12px;
-    overflow: auto;
+    overflow: hidden;
     font-family: Arial, sans-serif;
+}
+
+.hierarchy-selector__toolbar {
+    display: flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: flex-end;
+    min-height: 26px;
+}
+
+.hierarchy-selector__clear-all {
+    box-sizing: border-box;
+    min-height: 26px;
+    padding: 3px 8px;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    background: transparent;
+    color: #242424;
+    font: inherit;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.hierarchy-selector__clear-all:hover:not(:disabled) {
+    background: #f0f0f0;
+}
+
+.hierarchy-selector__clear-all:disabled {
+    opacity: 0.45;
+    cursor: default;
+}
+
+.hierarchy-selector__clear-all:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 1px;
+}
+
+.hierarchy-selector__levels {
+    box-sizing: border-box;
+    display: flex;
+    min-height: 0;
+    flex: 1 1 auto;
+    align-items: stretch;
+    gap: 12px;
+    overflow: auto;
 }
 
 .hierarchy-level {
@@ -19,14 +65,50 @@
     gap: 6px;
 }
 
-.hierarchy-level__label {
-    overflow: hidden;
+.hierarchy-level__header {
+    display: flex;
+    min-width: 0;
+    min-height: 24px;
     flex: 0 0 auto;
+    align-items: center;
+    gap: 4px;
+}
+
+.hierarchy-level__label {
+    min-width: 0;
+    flex: 1 1 auto;
+    overflow: hidden;
     font-size: 12px;
     font-weight: 600;
     line-height: 18px;
     text-overflow: ellipsis;
     white-space: nowrap;
+}
+
+.hierarchy-level__clear {
+    box-sizing: border-box;
+    width: 24px;
+    height: 24px;
+    flex: 0 0 24px;
+    padding: 0;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    background: transparent;
+    color: #242424;
+    font-family: Arial, sans-serif;
+    font-size: 18px;
+    line-height: 20px;
+    text-align: center;
+    cursor: pointer;
+}
+
+.hierarchy-level__clear:hover {
+    background: #f0f0f0;
+}
+
+.hierarchy-level__clear:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 1px;
 }
 
 .hierarchy-level__values {

@@ -42,7 +42,7 @@ export class Visual implements IVisual {
     /*
      * undefined means there is no local filter update awaiting confirmation.
      * null means a local filter clear is awaiting confirmation.
-     * An array means a local hierarchy filter is awaiting confirmation.
+     * An array means a hierarchy filter is awaiting confirmation.
      */
     private pendingFilterValues:
         PrimitiveValueType[] | null | undefined;
@@ -100,10 +100,6 @@ export class Visual implements IVisual {
             );
 
         if (this.pendingFilterValues !== undefined) {
-            /*
-             * A click has changed the local selection. Keep that selection
-             * until Power BI returns the matching filter in jsonFilters.
-             */
             if (
                 this.areFilterValuesEqual(
                     filterValues,
@@ -122,10 +118,6 @@ export class Visual implements IVisual {
                 );
             }
         } else {
-            /*
-             * No local filter change is pending, so this is report load,
-             * reset filters, bookmark restoration or another host update.
-             */
             this.selection.synchronizeFromValues(
                 this.hierarchyLevels,
                 filterValues
@@ -143,6 +135,26 @@ export class Visual implements IVisual {
             this.hierarchyLevels.length
         );
 
+        this.applyCurrentSelection();
+    }
+
+    private handleClearAll(): void {
+        this.selection.clear();
+        this.applyCurrentSelection();
+    }
+
+    private handleLevelClear(
+        levelIndex: number
+    ): void {
+        this.selection.clearFromLevel(
+            levelIndex,
+            this.hierarchyLevels.length
+        );
+
+        this.applyCurrentSelection();
+    }
+
+    private applyCurrentSelection(): void {
         const selectedPath =
             this.selection.getSelectedPath(
                 this.hierarchyLevels
@@ -176,7 +188,12 @@ export class Visual implements IVisual {
         this.renderer.render(
             visibleLevels,
             this.selection,
-            (node) => this.handleNodeSelection(node)
+            (node) =>
+                this.handleNodeSelection(node),
+            () =>
+                this.handleClearAll(),
+            (levelIndex) =>
+                this.handleLevelClear(levelIndex)
         );
     }
 
