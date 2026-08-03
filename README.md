@@ -18,6 +18,7 @@ The fields do not need to be configured as a formal Power BI hierarchy.
 - Select all compatible or matching values in Multiple mode
 - Space-efficient column layout for dashboard headers
 - Context-aware values across fields
+- Configurable value sorting: data order, A–Z or Z–A
 - Search automatically shown for fields with enough values
 - Global search visibility toggle and configurable value threshold
 - Selected values pinned above scrolling lists

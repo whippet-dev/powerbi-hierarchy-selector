@@ -578,6 +578,18 @@ export class Visual implements IVisual {
                 this.selection
             );
 
+        const sortOrderValue =
+            this.formattingSettings
+                .valuesCard
+                .sortOrder
+                .value;
+
+        const valueSortOrder =
+            sortOrderValue === "Ascending" ||
+            sortOrderValue === "Descending"
+                ? sortOrderValue
+                : "Data";
+
         this.renderer.render(
             visibleLevels,
             this.selection,
@@ -613,7 +625,8 @@ export class Visual implements IVisual {
             this.formattingSettings
                 .selectionCard
                 .showSelectAll
-                .value
+                .value,
+            valueSortOrder
         );
     }
 

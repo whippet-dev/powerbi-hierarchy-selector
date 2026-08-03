@@ -54,6 +54,25 @@
         "values": {
             "displayName": "Values",
             "properties": {
+                "sortOrder": {
+                    "displayName": "Sort order",
+                    "type": {
+                        "enumeration": [
+                            {
+                                "value": "Data",
+                                "displayName": "Data order"
+                            },
+                            {
+                                "value": "Ascending",
+                                "displayName": "A–Z"
+                            },
+                            {
+                                "value": "Descending",
+                                "displayName": "Z–A"
+                            }
+                        ]
+                    }
+                },
                 "fontFamily": {
                     "displayName": "Value font",
                     "type": {

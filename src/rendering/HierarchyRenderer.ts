@@ -35,7 +35,8 @@ export class HierarchyRenderer {
         showClearAll: boolean,
         multipleSelectionEnabled: boolean,
         showIncludedCounts: boolean,
-        showSelectAll: boolean
+        showSelectAll: boolean,
+        valueSortOrder: string
     ): void {
         this.pruneSearchTerms(
             hierarchyLevels.length
@@ -119,6 +120,12 @@ export class HierarchyRenderer {
                                 .Explicit
                     )
                     : selectedPathNodes;
+
+            const sortedPinnedNodes =
+                this.sortNodes(
+                    pinnedNodes,
+                    valueSortOrder
+                );
 
             const inheritedNodes =
                 multipleSelectionEnabled
@@ -256,7 +263,7 @@ export class HierarchyRenderer {
             } else {
                 const selectedNodeKeys =
                     new Set<string>(
-                        pinnedNodes.map(
+                        sortedPinnedNodes.map(
                             (node) => node.key
                         )
                     );
@@ -264,7 +271,9 @@ export class HierarchyRenderer {
                 let selectedContainer:
                     HTMLDivElement | undefined;
 
-                if (pinnedNodes.length > 0) {
+                if (
+                    sortedPinnedNodes.length > 0
+                ) {
                     selectedContainer =
                         document.createElement("div");
 
@@ -273,7 +282,7 @@ export class HierarchyRenderer {
 
                     for (
                         const pinnedNode of
-                        pinnedNodes
+                        sortedPinnedNodes
                     ) {
                         selectedContainer.appendChild(
                             this.createValueButton(
@@ -326,7 +335,8 @@ export class HierarchyRenderer {
                             selection,
                             onNodeSelection,
                             multipleSelectionEnabled,
-                            searchTerm
+                            searchTerm,
+                            valueSortOrder
                         );
 
                         if (selectAllButton) {
@@ -698,7 +708,8 @@ export class HierarchyRenderer {
         selection: HierarchySelection,
         onNodeSelection: (node: HierarchyNode) => void,
         multipleSelectionEnabled: boolean,
-        searchTerm: string
+        searchTerm: string,
+        valueSortOrder: string
     ): void {
         scrollContainer.replaceChildren();
 
@@ -742,45 +753,94 @@ export class HierarchyRenderer {
             return;
         }
 
-        const hasCompatibleMatch =
-            matchingNodes.some(
-                (node) =>
-                    hierarchyLevel
-                        .compatibleNodeKeys
-                        .has(node.key)
+        const compatibleNodes =
+            this.sortNodes(
+                matchingNodes.filter(
+                    (node) =>
+                        hierarchyLevel
+                            .compatibleNodeKeys
+                            .has(node.key)
+                ),
+                valueSortOrder
             );
 
-        let alternativeDividerAdded =
-            false;
+        const alternativeNodes =
+            this.sortNodes(
+                matchingNodes.filter(
+                    (node) =>
+                        !hierarchyLevel
+                            .compatibleNodeKeys
+                            .has(node.key)
+                ),
+                valueSortOrder
+            );
 
-        for (const node of matchingNodes) {
-            const isAlternative =
-                !hierarchyLevel
-                    .compatibleNodeKeys
-                    .has(node.key);
-
-            if (
-                isAlternative &&
-                hasCompatibleMatch &&
-                !alternativeDividerAdded
-            ) {
-                scrollContainer.appendChild(
-                    this.createAlternativeDivider()
-                );
-
-                alternativeDividerAdded = true;
-            }
-
+        for (const node of compatibleNodes) {
             scrollContainer.appendChild(
                 this.createValueButton(
                     node,
                     selection,
                     onNodeSelection,
-                    isAlternative,
+                    false,
                     multipleSelectionEnabled
                 )
             );
         }
+
+        if (
+            compatibleNodes.length > 0 &&
+            alternativeNodes.length > 0
+        ) {
+            scrollContainer.appendChild(
+                this.createAlternativeDivider()
+            );
+        }
+
+        for (const node of alternativeNodes) {
+            scrollContainer.appendChild(
+                this.createValueButton(
+                    node,
+                    selection,
+                    onNodeSelection,
+                    true,
+                    multipleSelectionEnabled
+                )
+            );
+        }
+    }
+
+    private sortNodes(
+        nodes: HierarchyNode[],
+        sortOrder: string
+    ): HierarchyNode[] {
+        const sortedNodes = [...nodes];
+
+        if (sortOrder === "Data") {
+            return sortedNodes;
+        }
+
+        sortedNodes.sort(
+            (
+                firstNode,
+                secondNode
+            ) => {
+                const comparison =
+                    firstNode.value.localeCompare(
+                        secondNode.value,
+                        undefined,
+                        {
+                            numeric: true,
+                            sensitivity: "base"
+                        }
+                    );
+
+                return sortOrder === "Descending"
+                    ? -comparison
+                    : comparison;
+            }
+        );
+
+        return sortedNodes;
     }
 
     private createAlternativeDivider():

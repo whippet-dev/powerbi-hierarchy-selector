@@ -53,6 +53,15 @@ class SelectionCardSettings extends FormattingSettingsCard {
 }
 
 class ValuesCardSettings extends FormattingSettingsCard {
+    public sortOrder =
+        new formattingSettings.AutoDropdown({
+            name: "sortOrder",
+            displayName: "Sort order",
+            description:
+                "Choose how values are ordered within compatible and alternative groups.",
+            value: "Data"
+        });
+
     public fontFamily =
         new formattingSettings.FontPicker({
             name: "fontFamily",
@@ -150,6 +159,7 @@ class ValuesCardSettings extends FormattingSettingsCard {
     public displayName: string = "Values";
 
     public slices: FormattingSettingsSlice[] = [
+        this.sortOrder,
         this.fontFamily,
         this.fontSize,
         this.buttonHeight,
