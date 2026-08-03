@@ -16,6 +16,38 @@
                     }
                 }
             }
+        },
+        "values": {
+            "displayName": "Values",
+            "properties": {
+                "fontSize": {
+                    "displayName": "Value text size",
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "buttonRadius": {
+                    "displayName": "Value corner radius",
+                    "type": {
+                        "numeric": true
+                    }
+                }
+            }
+        },
+        "colours": {
+            "displayName": "Colours",
+            "properties": {
+                "selectedBackground": {
+                    "displayName": "Selected background",
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                }
+            }
         }
     },
     "dataViewMappings": [

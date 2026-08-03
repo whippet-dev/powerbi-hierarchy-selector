@@ -131,10 +131,13 @@
     padding: 6px 10px;
     overflow: hidden;
     border: 1px solid transparent;
-    border-radius: 4px;
+    border-radius:
+        var(--hierarchy-value-radius, 4px);
     background: transparent;
     color: #242424;
     font: inherit;
+    font-size:
+        var(--hierarchy-value-font-size, 12px);
     text-align: left;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -147,12 +150,20 @@
 
 .hierarchy-level__value--selected {
     border-color: #605e5c;
-    background: #e1dfdd;
+    background:
+        var(
+            --hierarchy-selected-background,
+            #e1dfdd
+        );
     font-weight: 600;
 }
 
 .hierarchy-level__value--selected:hover {
-    background: #d2d0ce;
+    background:
+        var(
+            --hierarchy-selected-background,
+            #e1dfdd
+        );
 }
 
 .hierarchy-level__alternative-divider {

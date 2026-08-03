@@ -4,6 +4,9 @@ import powerbi from "powerbi-visuals-api";
 import {
     PrimitiveValueType
 } from "powerbi-models";
+import {
+    FormattingSettingsService
+} from "powerbi-visuals-utils-formattingmodel";
 import "../style/visual.less";
 
 import { HierarchyFilterService } from "./filtering/HierarchyFilterService";
@@ -14,19 +17,22 @@ import {
 } from "./models/hierarchy";
 import { HierarchyRenderer } from "./rendering/HierarchyRenderer";
 import { HierarchySelection } from "./selection/HierarchySelection";
+import {
+    VisualFormattingSettingsModel
+} from "./settings";
 import { HierarchyView } from "./view/HierarchyView";
 
 import VisualConstructorOptions =
-    powerbi.extensibility.visual.VisualConstructorOptions;
+powerbi.extensibility.visual.VisualConstructorOptions;
 
 import VisualUpdateOptions =
-    powerbi.extensibility.visual.VisualUpdateOptions;
+powerbi.extensibility.visual.VisualUpdateOptions;
 
 import IVisual =
-    powerbi.extensibility.visual.IVisual;
+powerbi.extensibility.visual.IVisual;
 
 import DataViewCategoryColumn =
-    powerbi.DataViewCategoryColumn;
+powerbi.DataViewCategoryColumn;
 
 export class Visual implements IVisual {
     private readonly container: HTMLDivElement;
@@ -35,6 +41,11 @@ export class Visual implements IVisual {
     private readonly hierarchyView: HierarchyView;
     private readonly renderer: HierarchyRenderer;
     private readonly filterService: HierarchyFilterService;
+    private readonly formattingSettingsService:
+        FormattingSettingsService;
+
+    private formattingSettings:
+        VisualFormattingSettingsModel;
 
     private hierarchyLevels: HierarchyLevel[] = [];
     private categories: DataViewCategoryColumn[] = [];
@@ -63,6 +74,12 @@ export class Visual implements IVisual {
 
         this.filterService =
             new HierarchyFilterService(options.host);
+
+        this.formattingSettingsService =
+            new FormattingSettingsService();
+
+        this.formattingSettings =
+            new VisualFormattingSettingsModel();
     }
 
     public update(options: VisualUpdateOptions): void {
@@ -71,6 +88,20 @@ export class Visual implements IVisual {
 
         this.container.style.height =
             `${options.viewport.height}px`;
+
+        const dataView =
+            options.dataViews?.[0];
+
+        this.formattingSettings =
+            dataView
+                ? this.formattingSettingsService
+                    .populateFormattingSettingsModel(
+                        VisualFormattingSettingsModel,
+                        dataView
+                    )
+                : new VisualFormattingSettingsModel();
+
+        this.applyFormattingSettings();
 
         this.categories =
             options.dataViews?.[0]?.categorical?.categories ?? [];
@@ -127,6 +158,14 @@ export class Visual implements IVisual {
         this.render();
     }
 
+    public getFormattingModel():
+        powerbi.visuals.FormattingModel {
+        return this.formattingSettingsService
+            .buildFormattingModel(
+                this.formattingSettings
+            );
+    }
+
     private handleNodeSelection(
         selectedNode: HierarchyNode
     ): void {
@@ -178,6 +217,51 @@ export class Visual implements IVisual {
         );
     }
 
+    private applyFormattingSettings(): void {
+        const fontSize =
+            this.clampNumber(
+                this.formattingSettings
+                    .valuesCard
+                    .fontSize
+                    .value,
+                8,
+                40
+            );
+
+        const buttonRadius =
+            this.clampNumber(
+                this.formattingSettings
+                    .valuesCard
+                    .buttonRadius
+                    .value,
+                0,
+                24
+            );
+
+        const selectedBackground =
+            this.formattingSettings
+                .coloursCard
+                .selectedBackground
+                .value
+                .value ||
+            "#E1DFDD";
+
+        this.container.style.setProperty(
+            "--hierarchy-value-font-size",
+            `${fontSize}px`
+        );
+
+        this.container.style.setProperty(
+            "--hierarchy-value-radius",
+            `${buttonRadius}px`
+        );
+
+        this.container.style.setProperty(
+            "--hierarchy-selected-background",
+            selectedBackground
+        );
+    }
+
     private render(): void {
         const visibleLevels =
             this.hierarchyView.getVisibleLevels(
@@ -218,6 +302,17 @@ export class Visual implements IVisual {
         return firstValues.every(
             (value, index) =>
                 value === secondValues[index]
+        );
+    }
+
+    private clampNumber(
+        value: number,
+        minimum: number,
+        maximum: number
+    ): number {
+        return Math.min(
+            maximum,
+            Math.max(minimum, value)
         );
     }
 }
