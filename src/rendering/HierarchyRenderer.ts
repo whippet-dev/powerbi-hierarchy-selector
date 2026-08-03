@@ -718,16 +718,10 @@ export class HierarchyRenderer {
                 .trim()
                 .toLocaleLowerCase();
 
-        const scrollableNodes =
-            hierarchyLevel.nodes.filter(
-                (node) =>
-                    !selectedNodeKeys.has(node.key)
-            );
-
-        const matchingNodes =
+        const allMatchingNodes =
             normalizedSearchTerm.length === 0
-                ? scrollableNodes
-                : scrollableNodes.filter(
+                ? hierarchyLevel.nodes
+                : hierarchyLevel.nodes.filter(
                     (node) =>
                         node.value
                             .toLocaleLowerCase()
@@ -736,19 +730,30 @@ export class HierarchyRenderer {
                             )
                 );
 
-        if (matchingNodes.length === 0) {
-            const noMatches =
-                document.createElement("div");
-
-            noMatches.className =
-                "hierarchy-level__no-matches";
-
-            noMatches.textContent =
-                "No matching values";
-
-            scrollContainer.appendChild(
-                noMatches
+        const matchingNodes =
+            allMatchingNodes.filter(
+                (node) =>
+                    !selectedNodeKeys.has(node.key)
             );
+
+        if (matchingNodes.length === 0) {
+            if (
+                normalizedSearchTerm.length > 0 &&
+                allMatchingNodes.length === 0
+            ) {
+                const noMatches =
+                    document.createElement("div");
+
+                noMatches.className =
+                    "hierarchy-level__no-matches";
+
+                noMatches.textContent =
+                    "No matching values";
+
+                scrollContainer.appendChild(
+                    noMatches
+                );
+            }
 
             return;
         }
