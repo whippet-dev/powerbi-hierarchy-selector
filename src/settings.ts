@@ -1,49 +1,69 @@
 "use strict";
 
+import powerbi from "powerbi-visuals-api";
 import {
     formattingSettings
 } from "powerbi-visuals-utils-formattingmodel";
 
 import FormattingSettingsCard =
-formattingSettings.SimpleCard;
+    formattingSettings.SimpleCard;
 
 import FormattingSettingsSlice =
-formattingSettings.Slice;
+    formattingSettings.Slice;
 
 import FormattingSettingsModel =
-formattingSettings.Model;
-
-import powerbi from "powerbi-visuals-api";
+    formattingSettings.Model;
 
 class ValuesCardSettings extends FormattingSettingsCard {
-public fontSize =
-    new formattingSettings.NumUpDown({
-        name: "fontSize",
-        displayName: "Value text size",
-        description:
-            "Sets the text size used by hierarchy value buttons.",
-        value: 12,
-        options: {
-            minValue: {
-                type:
-                    powerbi.visuals.ValidatorType.Min,
-                value: 8
-            },
-            maxValue: {
-                type:
-                    powerbi.visuals.ValidatorType.Max,
-                value: 28
+    public fontFamily =
+        new formattingSettings.FontPicker({
+            name: "fontFamily",
+            displayName: "Value font",
+            description:
+                "Choose the font family used for hierarchy value buttons.",
+            value: "Arial, sans-serif"
+        });
+
+    public fontSize =
+        new formattingSettings.NumUpDown({
+            name: "fontSize",
+            displayName: "Value text size",
+            description:
+                "Set the text size used for hierarchy values, from 8 to 28 pixels.",
+            value: 12,
+            options: {
+                minValue: {
+                    type:
+                        powerbi.visuals.ValidatorType.Min,
+                    value: 8
+                },
+                maxValue: {
+                    type:
+                        powerbi.visuals.ValidatorType.Max,
+                    value: 28
+                }
             }
-        }
-    });
+        });
 
     public buttonHeight =
         new formattingSettings.NumUpDown({
             name: "buttonHeight",
             displayName: "Value height",
             description:
-                "Sets the minimum height of hierarchy value buttons.",
-            value: 32
+                "Set the minimum height of each hierarchy value button, from 20 to 80 pixels.",
+            value: 32,
+            options: {
+                minValue: {
+                    type:
+                        powerbi.visuals.ValidatorType.Min,
+                    value: 20
+                },
+                maxValue: {
+                    type:
+                        powerbi.visuals.ValidatorType.Max,
+                    value: 80
+                }
+            }
         });
 
     public buttonRadius =
@@ -51,8 +71,20 @@ public fontSize =
             name: "buttonRadius",
             displayName: "Value corner radius",
             description:
-                "Sets the corner radius used by hierarchy value buttons.",
-            value: 4
+                "Round the corners of hierarchy value buttons. Use 0 for square corners.",
+            value: 4,
+            options: {
+                minValue: {
+                    type:
+                        powerbi.visuals.ValidatorType.Min,
+                    value: 0
+                },
+                maxValue: {
+                    type:
+                        powerbi.visuals.ValidatorType.Max,
+                    value: 24
+                }
+            }
         });
 
     public buttonGap =
@@ -60,14 +92,27 @@ public fontSize =
             name: "buttonGap",
             displayName: "Gap between values",
             description:
-                "Sets the vertical gap between hierarchy value buttons.",
-            value: 4
+                "Set the vertical spacing between hierarchy value buttons.",
+            value: 4,
+            options: {
+                minValue: {
+                    type:
+                        powerbi.visuals.ValidatorType.Min,
+                    value: 0
+                },
+                maxValue: {
+                    type:
+                        powerbi.visuals.ValidatorType.Max,
+                    value: 24
+                }
+            }
         });
 
     public name: string = "values";
     public displayName: string = "Values";
 
     public slices: FormattingSettingsSlice[] = [
+        this.fontFamily,
         this.fontSize,
         this.buttonHeight,
         this.buttonRadius,
@@ -80,6 +125,8 @@ class ColoursCardSettings extends FormattingSettingsCard {
         new formattingSettings.ColorPicker({
             name: "valueText",
             displayName: "Value text",
+            description:
+                "Set the text colour used by normal hierarchy values.",
             value: {
                 value: "#242424"
             }
@@ -89,6 +136,8 @@ class ColoursCardSettings extends FormattingSettingsCard {
         new formattingSettings.ColorPicker({
             name: "hoverBackground",
             displayName: "Hover background",
+            description:
+                "Set the background colour shown when the pointer is over a hierarchy value.",
             value: {
                 value: "#F0F0F0"
             }
@@ -98,6 +147,8 @@ class ColoursCardSettings extends FormattingSettingsCard {
         new formattingSettings.ColorPicker({
             name: "selectedText",
             displayName: "Selected text",
+            description:
+                "Set the text colour used by selected hierarchy values.",
             value: {
                 value: "#242424"
             }
@@ -107,6 +158,8 @@ class ColoursCardSettings extends FormattingSettingsCard {
         new formattingSettings.ColorPicker({
             name: "selectedBackground",
             displayName: "Selected background",
+            description:
+                "Set the background colour used to highlight selected hierarchy values.",
             value: {
                 value: "#E1DFDD"
             }
@@ -117,9 +170,30 @@ class ColoursCardSettings extends FormattingSettingsCard {
             name: "alternativeText",
             displayName: "Alternative text",
             description:
-                "Sets the text colour of values outside the active hierarchy branch.",
+                "Set the text colour of values outside the currently active hierarchy branch.",
             value: {
                 value: "#6B6B6B"
+            }
+        });
+
+    public alternativeOpacity =
+        new formattingSettings.NumUpDown({
+            name: "alternativeOpacity",
+            displayName: "Alternative opacity",
+            description:
+                "Set how strongly values outside the active hierarchy branch are muted, from 10% to 100%.",
+            value: 65,
+            options: {
+                minValue: {
+                    type:
+                        powerbi.visuals.ValidatorType.Min,
+                    value: 10
+                },
+                maxValue: {
+                    type:
+                        powerbi.visuals.ValidatorType.Max,
+                    value: 100
+                }
             }
         });
 
@@ -127,6 +201,8 @@ class ColoursCardSettings extends FormattingSettingsCard {
         new formattingSettings.ColorPicker({
             name: "borderColour",
             displayName: "Borders and dividers",
+            description:
+                "Set the colour used for level borders, selected-value borders and alternative-value dividers.",
             value: {
                 value: "#D1D1D1"
             }
@@ -141,34 +217,57 @@ class ColoursCardSettings extends FormattingSettingsCard {
         this.selectedText,
         this.selectedBackground,
         this.alternativeText,
+        this.alternativeOpacity,
         this.borderColour
     ];
 }
 
 class HeadingsCardSettings extends FormattingSettingsCard {
-public fontSize =
-    new formattingSettings.NumUpDown({
-        name: "fontSize",
-        displayName: "Heading text size",
-        value: 12,
-        options: {
-            minValue: {
-                type:
-                    powerbi.visuals.ValidatorType.Min,
-                value: 8
-            },
-            maxValue: {
-                type:
-                    powerbi.visuals.ValidatorType.Max,
-                value: 28
+    public fontFamily =
+        new formattingSettings.FontPicker({
+            name: "fontFamily",
+            displayName: "Heading font",
+            description:
+                "Choose the font family used for hierarchy level headings.",
+            value: "Arial, sans-serif"
+        });
+
+    public fontSize =
+        new formattingSettings.NumUpDown({
+            name: "fontSize",
+            displayName: "Heading text size",
+            description:
+                "Set the text size used for hierarchy level headings, from 8 to 28 pixels.",
+            value: 12,
+            options: {
+                minValue: {
+                    type:
+                        powerbi.visuals.ValidatorType.Min,
+                    value: 8
+                },
+                maxValue: {
+                    type:
+                        powerbi.visuals.ValidatorType.Max,
+                    value: 28
+                }
             }
-        }
-    });
+        });
+
+    public bold =
+        new formattingSettings.ToggleSwitch({
+            name: "bold",
+            displayName: "Bold headings",
+            description:
+                "Use a bold font weight for hierarchy level headings.",
+            value: true
+        });
 
     public textColour =
         new formattingSettings.ColorPicker({
             name: "textColour",
             displayName: "Heading text",
+            description:
+                "Set the text colour used by hierarchy level headings.",
             value: {
                 value: "#242424"
             }
@@ -178,8 +277,184 @@ public fontSize =
     public displayName: string = "Headings";
 
     public slices: FormattingSettingsSlice[] = [
+        this.fontFamily,
         this.fontSize,
+        this.bold,
         this.textColour
+    ];
+}
+
+class LevelContainersCardSettings
+    extends FormattingSettingsCard {
+    public showBackground =
+        new formattingSettings.ToggleSwitch({
+            name: "showBackground",
+            displayName: "Show background",
+            description:
+                "Show a background colour behind each hierarchy level's value list.",
+            value: false
+        });
+
+    public backgroundColour =
+        new formattingSettings.ColorPicker({
+            name: "backgroundColour",
+            displayName: "Background",
+            description:
+                "Set the background colour used behind each hierarchy level's value list.",
+            value: {
+                value: "#FFFFFF"
+            }
+        });
+
+    public borderWidth =
+        new formattingSettings.NumUpDown({
+            name: "borderWidth",
+            displayName: "Border width",
+            description:
+                "Set the width of the border around each hierarchy level's value list. Use 0 to hide the border.",
+            value: 1,
+            options: {
+                minValue: {
+                    type:
+                        powerbi.visuals.ValidatorType.Min,
+                    value: 0
+                },
+                maxValue: {
+                    type:
+                        powerbi.visuals.ValidatorType.Max,
+                    value: 8
+                }
+            }
+        });
+
+    public cornerRadius =
+        new formattingSettings.NumUpDown({
+            name: "cornerRadius",
+            displayName: "Corner radius",
+            description:
+                "Round the corners of each hierarchy level container. Use 0 for square corners.",
+            value: 4,
+            options: {
+                minValue: {
+                    type:
+                        powerbi.visuals.ValidatorType.Min,
+                    value: 0
+                },
+                maxValue: {
+                    type:
+                        powerbi.visuals.ValidatorType.Max,
+                    value: 24
+                }
+            }
+        });
+
+    public innerPadding =
+        new formattingSettings.NumUpDown({
+            name: "innerPadding",
+            displayName: "Inner padding",
+            description:
+                "Set the space between a level container's border and its hierarchy values.",
+            value: 4,
+            options: {
+                minValue: {
+                    type:
+                        powerbi.visuals.ValidatorType.Min,
+                    value: 0
+                },
+                maxValue: {
+                    type:
+                        powerbi.visuals.ValidatorType.Max,
+                    value: 20
+                }
+            }
+        });
+
+    public name: string = "levelContainers";
+    public displayName: string = "Level containers";
+
+    public slices: FormattingSettingsSlice[] = [
+        this.showBackground,
+        this.backgroundColour,
+        this.borderWidth,
+        this.cornerRadius,
+        this.innerPadding
+    ];
+}
+
+class ClearControlsCardSettings
+    extends FormattingSettingsCard {
+    public textColour =
+        new formattingSettings.ColorPicker({
+            name: "textColour",
+            displayName: "Text and icon",
+            description:
+                "Set the colour used by the Clear all text and the per-level clear icons.",
+            value: {
+                value: "#242424"
+            }
+        });
+
+    public hoverBackground =
+        new formattingSettings.ColorPicker({
+            name: "hoverBackground",
+            displayName: "Hover background",
+            description:
+                "Set the background colour shown when the pointer is over a clear control.",
+            value: {
+                value: "#F0F0F0"
+            }
+        });
+
+    public clearAllFontSize =
+        new formattingSettings.NumUpDown({
+            name: "clearAllFontSize",
+            displayName: "Clear all text size",
+            description:
+                "Set the text size used by the Clear all control, from 8 to 20 pixels.",
+            value: 12,
+            options: {
+                minValue: {
+                    type:
+                        powerbi.visuals.ValidatorType.Min,
+                    value: 8
+                },
+                maxValue: {
+                    type:
+                        powerbi.visuals.ValidatorType.Max,
+                    value: 20
+                }
+            }
+        });
+
+    public levelIconSize =
+        new formattingSettings.NumUpDown({
+            name: "levelIconSize",
+            displayName: "Level clear icon size",
+            description:
+                "Set the size of the clear icon shown beside a selected hierarchy level.",
+            value: 18,
+            options: {
+                minValue: {
+                    type:
+                        powerbi.visuals.ValidatorType.Min,
+                    value: 10
+                },
+                maxValue: {
+                    type:
+                        powerbi.visuals.ValidatorType.Max,
+                    value: 28
+                }
+            }
+        });
+
+    public name: string = "clearControls";
+    public displayName: string = "Clear controls";
+
+    public slices: FormattingSettingsSlice[] = [
+        this.textColour,
+        this.hoverBackground,
+        this.clearAllFontSize,
+        this.levelIconSize
     ];
 }
 
@@ -188,20 +463,71 @@ class LayoutCardSettings extends FormattingSettingsCard {
         new formattingSettings.NumUpDown({
             name: "visualPadding",
             displayName: "Visual padding",
-            value: 12
+            description:
+                "Set the space between the edge of the visual and its hierarchy content.",
+            value: 12,
+            options: {
+                minValue: {
+                    type:
+                        powerbi.visuals.ValidatorType.Min,
+                    value: 0
+                },
+                maxValue: {
+                    type:
+                        powerbi.visuals.ValidatorType.Max,
+                    value: 40
+                }
+            }
         });
 
     public levelGap =
         new formattingSettings.NumUpDown({
             name: "levelGap",
             displayName: "Gap between levels",
-            value: 12
+            description:
+                "Set the horizontal spacing between hierarchy level columns.",
+            value: 12,
+            options: {
+                minValue: {
+                    type:
+                        powerbi.visuals.ValidatorType.Min,
+                    value: 0
+                },
+                maxValue: {
+                    type:
+                        powerbi.visuals.ValidatorType.Max,
+                    value: 40
+                }
+            }
+        });
+
+    public minimumLevelWidth =
+        new formattingSettings.NumUpDown({
+            name: "minimumLevelWidth",
+            displayName: "Minimum level width",
+            description:
+                "Set the minimum width of each hierarchy level. Wider levels may introduce horizontal scrolling.",
+            value: 160,
+            options: {
+                minValue: {
+                    type:
+                        powerbi.visuals.ValidatorType.Min,
+                    value: 80
+                },
+                maxValue: {
+                    type:
+                        powerbi.visuals.ValidatorType.Max,
+                    value: 400
+                }
+            }
         });
 
     public showClearAll =
         new formattingSettings.ToggleSwitch({
             name: "showClearAll",
             displayName: "Show Clear all",
+            description:
+                "Show or hide the Clear all control above the hierarchy levels.",
             value: true
         });
 
@@ -211,6 +537,7 @@ class LayoutCardSettings extends FormattingSettingsCard {
     public slices: FormattingSettingsSlice[] = [
         this.visualPadding,
         this.levelGap,
+        this.minimumLevelWidth,
         this.showClearAll
     ];
 }
@@ -226,6 +553,12 @@ export class VisualFormattingSettingsModel
     public headingsCard =
         new HeadingsCardSettings();
 
+    public levelContainersCard =
+        new LevelContainersCardSettings();
+
+    public clearControlsCard =
+        new ClearControlsCardSettings();
+
     public layoutCard =
         new LayoutCardSettings();
 
@@ -233,6 +566,8 @@ export class VisualFormattingSettingsModel
         this.valuesCard,
         this.coloursCard,
         this.headingsCard,
+        this.levelContainersCard,
+        this.clearControlsCard,
         this.layoutCard
     ];
 }

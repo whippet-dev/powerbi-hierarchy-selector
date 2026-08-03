@@ -50,11 +50,6 @@ export class Visual implements IVisual {
     private hierarchyLevels: HierarchyLevel[] = [];
     private categories: DataViewCategoryColumn[] = [];
 
-    /*
-     * undefined means there is no local filter update awaiting confirmation.
-     * null means a local filter clear is awaiting confirmation.
-     * An array means a hierarchy filter is awaiting confirmation.
-     */
     private pendingFilterValues:
         PrimitiveValueType[] | null | undefined;
 
@@ -218,104 +213,89 @@ export class Visual implements IVisual {
     }
 
     private applyFormattingSettings(): void {
-        const fontSize =
+        const values =
+            this.formattingSettings.valuesCard;
+
+        const colours =
+            this.formattingSettings.coloursCard;
+
+        const headings =
+            this.formattingSettings.headingsCard;
+
+        const levelContainers =
+            this.formattingSettings
+                .levelContainersCard;
+
+        const clearControls =
+            this.formattingSettings
+                .clearControlsCard;
+
+        const layout =
+            this.formattingSettings.layoutCard;
+
+        const valueFontSize =
             this.clampNumber(
-                this.formattingSettings
-                    .valuesCard
-                    .fontSize
-                    .value,
+                values.fontSize.value,
                 8,
                 28
-            );
-
-        const buttonHeight =
-            this.clampNumber(
-                this.formattingSettings
-                    .valuesCard
-                    .buttonHeight
-                    .value,
-                20,
-                80
-            );
-
-        const buttonRadius =
-            this.clampNumber(
-                this.formattingSettings
-                    .valuesCard
-                    .buttonRadius
-                    .value,
-                0,
-                24
-            );
-
-        const buttonGap =
-            this.clampNumber(
-                this.formattingSettings
-                    .valuesCard
-                    .buttonGap
-                    .value,
-                0,
-                24
             );
 
         const headingFontSize =
             this.clampNumber(
-                this.formattingSettings
-                    .headingsCard
-                    .fontSize
-                    .value,
+                headings.fontSize.value,
                 8,
                 28
             );
 
-        const visualPadding =
+        const alternativeOpacity =
             this.clampNumber(
-                this.formattingSettings
-                    .layoutCard
-                    .visualPadding
-                    .value,
-                0,
-                40
-            );
+                colours.alternativeOpacity.value,
+                10,
+                100
+            ) / 100;
 
-        const levelGap =
-            this.clampNumber(
-                this.formattingSettings
-                    .layoutCard
-                    .levelGap
-                    .value,
-                0,
-                40
-            );
+        this.setCssVariable(
+            "--hierarchy-value-font-family",
+            values.fontFamily.value ||
+                "Arial, sans-serif"
+        );
 
         this.setCssVariable(
             "--hierarchy-value-font-size",
-            `${fontSize}px`
+            `${valueFontSize}px`
         );
 
         this.setCssVariable(
             "--hierarchy-value-height",
-            `${buttonHeight}px`
+            `${this.clampNumber(
+                values.buttonHeight.value,
+                20,
+                80
+            )}px`
         );
 
         this.setCssVariable(
             "--hierarchy-value-radius",
-            `${buttonRadius}px`
+            `${this.clampNumber(
+                values.buttonRadius.value,
+                0,
+                24
+            )}px`
         );
 
         this.setCssVariable(
             "--hierarchy-value-gap",
-            `${buttonGap}px`
+            `${this.clampNumber(
+                values.buttonGap.value,
+                0,
+                24
+            )}px`
         );
 
         this.setCssVariable(
             "--hierarchy-value-text",
             this.getColour(
-                this.formattingSettings
-                    .coloursCard
-                    .valueText
-                    .value
-                    .value,
+                colours.valueText.value.value,
                 "#242424"
             )
         );
@@ -323,11 +303,7 @@ export class Visual implements IVisual {
         this.setCssVariable(
             "--hierarchy-hover-background",
             this.getColour(
-                this.formattingSettings
-                    .coloursCard
-                    .hoverBackground
-                    .value
-                    .value,
+                colours.hoverBackground.value.value,
                 "#F0F0F0"
             )
         );
@@ -335,11 +311,7 @@ export class Visual implements IVisual {
         this.setCssVariable(
             "--hierarchy-selected-text",
             this.getColour(
-                this.formattingSettings
-                    .coloursCard
-                    .selectedText
-                    .value
-                    .value,
+                colours.selectedText.value.value,
                 "#242424"
             )
         );
@@ -347,8 +319,7 @@ export class Visual implements IVisual {
         this.setCssVariable(
             "--hierarchy-selected-background",
             this.getColour(
-                this.formattingSettings
-                    .coloursCard
+                colours
                     .selectedBackground
                     .value
                     .value,
@@ -359,25 +330,28 @@ export class Visual implements IVisual {
         this.setCssVariable(
             "--hierarchy-alternative-text",
             this.getColour(
-                this.formattingSettings
-                    .coloursCard
-                    .alternativeText
-                    .value
-                    .value,
+                colours.alternativeText.value.value,
                 "#6B6B6B"
             )
         );
 
         this.setCssVariable(
+            "--hierarchy-alternative-opacity",
+            alternativeOpacity.toString()
+        );
+
+        this.setCssVariable(
             "--hierarchy-border-colour",
             this.getColour(
-                this.formattingSettings
-                    .coloursCard
-                    .borderColour
-                    .value
-                    .value,
+                colours.borderColour.value.value,
                 "#D1D1D1"
             )
+        );
+
+        this.setCssVariable(
+            "--hierarchy-heading-font-family",
+            headings.fontFamily.value ||
+                "Arial, sans-serif"
         );
 
         this.setCssVariable(
@@ -386,33 +360,130 @@ export class Visual implements IVisual {
         );
 
         this.setCssVariable(
+            "--hierarchy-heading-weight",
+            headings.bold.value
+                ? "600"
+                : "400"
+        );
+
+        this.setCssVariable(
             "--hierarchy-heading-text",
             this.getColour(
-                this.formattingSettings
-                    .headingsCard
-                    .textColour
-                    .value
-                    .value,
+                headings.textColour.value.value,
+                "#242424"
+            )
+        );
+
+        const containerBackground =
+            levelContainers.showBackground.value
+                ? this.getColour(
+                    levelContainers
+                        .backgroundColour
+                        .value
+                        .value,
+                    "#FFFFFF"
+                )
+                : "transparent";
+
+        this.setCssVariable(
+            "--hierarchy-container-background",
+            containerBackground
+        );
+
+        this.setCssVariable(
+            "--hierarchy-container-border-width",
+            `${this.clampNumber(
+                levelContainers.borderWidth.value,
+                0,
+                8
+            )}px`
+        );
+
+        this.setCssVariable(
+            "--hierarchy-container-radius",
+            `${this.clampNumber(
+                levelContainers.cornerRadius.value,
+                0,
+                24
+            )}px`
+        );
+
+        this.setCssVariable(
+            "--hierarchy-container-padding",
+            `${this.clampNumber(
+                levelContainers.innerPadding.value,
+                0,
+                20
+            )}px`
+        );
+
+        this.setCssVariable(
+            "--hierarchy-clear-text",
+            this.getColour(
+                clearControls.textColour.value.value,
                 "#242424"
             )
         );
 
         this.setCssVariable(
+            "--hierarchy-clear-hover-background",
+            this.getColour(
+                clearControls
+                    .hoverBackground
+                    .value
+                    .value,
+                "#F0F0F0"
+            )
+        );
+
+        this.setCssVariable(
+            "--hierarchy-clear-all-font-size",
+            `${this.clampNumber(
+                clearControls.clearAllFontSize.value,
+                8,
+                20
+            )}px`
+        );
+
+        this.setCssVariable(
+            "--hierarchy-clear-icon-size",
+            `${this.clampNumber(
+                clearControls.levelIconSize.value,
+                10,
+                28
+            )}px`
+        );
+
+        this.setCssVariable(
             "--hierarchy-visual-padding",
-            `${visualPadding}px`
+            `${this.clampNumber(
+                layout.visualPadding.value,
+                0,
+                40
+            )}px`
         );
 
         this.setCssVariable(
             "--hierarchy-level-gap",
-            `${levelGap}px`
+            `${this.clampNumber(
+                layout.levelGap.value,
+                0,
+                40
+            )}px`
+        );
+
+        this.setCssVariable(
+            "--hierarchy-level-min-width",
+            `${this.clampNumber(
+                layout.minimumLevelWidth.value,
+                80,
+                400
+            )}px`
         );
 
         this.container.classList.toggle(
             "hierarchy-selector--hide-clear-all",
-            !this.formattingSettings
-                .layoutCard
-                .showClearAll
-                .value
+            !layout.showClearAll.value
         );
     }
 

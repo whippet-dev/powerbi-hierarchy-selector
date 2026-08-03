@@ -20,10 +20,20 @@
         "values": {
             "displayName": "Values",
             "properties": {
+                "fontFamily": {
+                    "displayName": "Value font",
+                    "type": {
+                        "formatting": {
+                            "fontFamily": true
+                        }
+                    }
+                },
                 "fontSize": {
                     "displayName": "Value text size",
                     "type": {
-                        "numeric": true
+                        "formatting": {
+                            "fontSize": true
+                        }
                     }
                 },
                 "buttonHeight": {
@@ -99,6 +109,12 @@
                         }
                     }
                 },
+                "alternativeOpacity": {
+                    "displayName": "Alternative opacity",
+                    "type": {
+                        "numeric": true
+                    }
+                },
                 "borderColour": {
                     "displayName": "Borders and dividers",
                     "type": {
@@ -114,10 +130,26 @@
         "headings": {
             "displayName": "Headings",
             "properties": {
+                "fontFamily": {
+                    "displayName": "Heading font",
+                    "type": {
+                        "formatting": {
+                            "fontFamily": true
+                        }
+                    }
+                },
                 "fontSize": {
                     "displayName": "Heading text size",
                     "type": {
-                        "numeric": true
+                        "formatting": {
+                            "fontSize": true
+                        }
+                    }
+                },
+                "bold": {
+                    "displayName": "Bold headings",
+                    "type": {
+                        "bool": true
                     }
                 },
                 "textColour": {
@@ -127,6 +159,86 @@
                             "solid": {
                                 "color": true
                             }
+                        }
+                    }
+                }
+            }
+        },
+        "levelContainers": {
+            "displayName": "Level containers",
+            "properties": {
+                "showBackground": {
+                    "displayName": "Show background",
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "backgroundColour": {
+                    "displayName": "Background",
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "borderWidth": {
+                    "displayName": "Border width",
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "cornerRadius": {
+                    "displayName": "Corner radius",
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "innerPadding": {
+                    "displayName": "Inner padding",
+                    "type": {
+                        "numeric": true
+                    }
+                }
+            }
+        },
+        "clearControls": {
+            "displayName": "Clear controls",
+            "properties": {
+                "textColour": {
+                    "displayName": "Text and icon",
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "hoverBackground": {
+                    "displayName": "Hover background",
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "clearAllFontSize": {
+                    "displayName": "Clear all text size",
+                    "type": {
+                        "formatting": {
+                            "fontSize": true
+                        }
+                    }
+                },
+                "levelIconSize": {
+                    "displayName": "Level clear icon size",
+                    "type": {
+                        "formatting": {
+                            "fontSize": true
                         }
                     }
                 }
@@ -143,6 +255,12 @@
                 },
                 "levelGap": {
                     "displayName": "Gap between levels",
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "minimumLevelWidth": {
+                    "displayName": "Minimum level width",
                     "type": {
                         "numeric": true
                     }

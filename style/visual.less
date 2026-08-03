@@ -9,14 +9,20 @@
     padding:
         var(--hierarchy-visual-padding, 12px);
     overflow: hidden;
-    font-family: Arial, sans-serif;
+    font-family:
+        var(
+            --hierarchy-value-font-family,
+            Arial,
+            sans-serif
+        );
 }
 
 .hierarchy-selector--hide-clear-all {
     gap: 0;
 }
 
-.hierarchy-selector--hide-clear-all .hierarchy-selector__toolbar {
+.hierarchy-selector--hide-clear-all
+.hierarchy-selector__toolbar {
     display: none;
 }
 
@@ -36,16 +42,27 @@
     border-radius: 4px;
     background: transparent;
     color:
-        var(--hierarchy-value-text, #242424);
-    font: inherit;
-    font-size: 12px;
+        var(--hierarchy-clear-text, #242424);
+    font-family:
+        var(
+            --hierarchy-value-font-family,
+            Arial,
+            sans-serif
+        );
+    font-size:
+        var(
+            --hierarchy-clear-all-font-size,
+            12px
+        );
     cursor: pointer;
 }
 
 .hierarchy-selector__clear-all:hover:not(:disabled) {
     background:
-        var(--hierarchy-hover-background,
-            #f0f0f0);
+        var(
+            --hierarchy-clear-hover-background,
+            #f0f0f0
+        );
 }
 
 .hierarchy-selector__clear-all:disabled {
@@ -72,7 +89,8 @@
 .hierarchy-level {
     box-sizing: border-box;
     display: flex;
-    min-width: 160px;
+    min-width:
+        var(--hierarchy-level-min-width, 160px);
     flex: 1 1 0;
     flex-direction: column;
     gap: 6px;
@@ -81,10 +99,7 @@
 .hierarchy-level__header {
     display: flex;
     min-width: 0;
-    min-height:
-        max(24px,
-            calc(var(--hierarchy-heading-font-size,
-                    12px) * 1.4));
+    min-height: 24px;
     flex: 0 0 auto;
     align-items: center;
     gap: 4px;
@@ -96,10 +111,19 @@
     overflow: hidden;
     color:
         var(--hierarchy-heading-text, #242424);
+    font-family:
+        var(
+            --hierarchy-heading-font-family,
+            Arial,
+            sans-serif
+        );
     font-size:
-        var(--hierarchy-heading-font-size,
-            12px);
-    font-weight: 600;
+        var(
+            --hierarchy-heading-font-size,
+            12px
+        );
+    font-weight:
+        var(--hierarchy-heading-weight, 600);
     line-height: 1.2;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -115,18 +139,21 @@
     border-radius: 4px;
     background: transparent;
     color:
-        var(--hierarchy-heading-text, #242424);
+        var(--hierarchy-clear-text, #242424);
     font-family: Arial, sans-serif;
-    font-size: 18px;
-    line-height: 20px;
+    font-size:
+        var(--hierarchy-clear-icon-size, 18px);
+    line-height: 1;
     text-align: center;
     cursor: pointer;
 }
 
 .hierarchy-level__clear:hover {
     background:
-        var(--hierarchy-hover-background,
-            #f0f0f0);
+        var(
+            --hierarchy-clear-hover-background,
+            #f0f0f0
+        );
 }
 
 .hierarchy-level__clear:focus-visible {
@@ -142,11 +169,30 @@
     flex-direction: column;
     gap:
         var(--hierarchy-value-gap, 4px);
-    padding: 4px;
+    padding:
+        var(--hierarchy-container-padding, 4px);
     overflow-y: auto;
-    border: 1px solid var(--hierarchy-border-colour,
-            #d1d1d1);
-    border-radius: 4px;
+    border-style: solid;
+    border-width:
+        var(
+            --hierarchy-container-border-width,
+            1px
+        );
+    border-color:
+        var(
+            --hierarchy-border-colour,
+            #d1d1d1
+        );
+    border-radius:
+        var(
+            --hierarchy-container-radius,
+            4px
+        );
+    background:
+        var(
+            --hierarchy-container-background,
+            transparent
+        );
 }
 
 .hierarchy-level__value {
@@ -163,7 +209,12 @@
     background: transparent;
     color:
         var(--hierarchy-value-text, #242424);
-    font: inherit;
+    font-family:
+        var(
+            --hierarchy-value-font-family,
+            Arial,
+            sans-serif
+        );
     font-size:
         var(--hierarchy-value-font-size, 12px);
     line-height: 1.2;
@@ -175,27 +226,37 @@
 
 .hierarchy-level__value:hover {
     background:
-        var(--hierarchy-hover-background,
-            #f0f0f0);
+        var(
+            --hierarchy-hover-background,
+            #f0f0f0
+        );
 }
 
 .hierarchy-level__value--selected {
     border-color:
-        var(--hierarchy-border-colour,
-            #605e5c);
+        var(
+            --hierarchy-border-colour,
+            #605e5c
+        );
     background:
-        var(--hierarchy-selected-background,
-            #e1dfdd);
+        var(
+            --hierarchy-selected-background,
+            #e1dfdd
+        );
     color:
-        var(--hierarchy-selected-text,
-            #242424);
+        var(
+            --hierarchy-selected-text,
+            #242424
+        );
     font-weight: 600;
 }
 
 .hierarchy-level__value--selected:hover {
     background:
-        var(--hierarchy-selected-background,
-            #e1dfdd);
+        var(
+            --hierarchy-selected-background,
+            #e1dfdd
+        );
 }
 
 .hierarchy-level__alternative-divider {
@@ -204,15 +265,23 @@
     flex: 0 0 1px;
     margin: 3px 4px;
     background:
-        var(--hierarchy-border-colour,
-            #d1d1d1);
+        var(
+            --hierarchy-border-colour,
+            #d1d1d1
+        );
 }
 
 .hierarchy-level__value--alternative {
     color:
-        var(--hierarchy-alternative-text,
-            #6b6b6b);
-    opacity: 0.65;
+        var(
+            --hierarchy-alternative-text,
+            #6b6b6b
+        );
+    opacity:
+        var(
+            --hierarchy-alternative-opacity,
+            0.65
+        );
 }
 
 .hierarchy-level__value--alternative:hover {
