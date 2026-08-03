@@ -16,13 +16,25 @@ import PrimitiveValue =
     powerbi.PrimitiveValue;
 
 export class HierarchyTree {
+    private static readonly defaultBlankLabel =
+        "(No value)";
+
     public build(
-        matrix: DataViewMatrix
+        matrix: DataViewMatrix,
+        blankLabel: string =
+            HierarchyTree.defaultBlankLabel
     ): HierarchyNode[] {
+        const displayBlankLabel =
+            blankLabel.trim().length > 0
+                ? blankLabel.trim()
+                : HierarchyTree
+                    .defaultBlankLabel;
+
         return this.buildNodes(
             matrix.rows.root.children ?? [],
             null,
-            []
+            [],
+            displayBlankLabel
         );
     }
 
@@ -70,7 +82,8 @@ export class HierarchyTree {
     private buildNodes(
         matrixNodes: DataViewMatrixNode[],
         parentNode: HierarchyNode | null,
-        parentPathParts: string[]
+        parentPathParts: string[],
+        blankLabel: string
     ): HierarchyNode[] {
         const hierarchyNodes: HierarchyNode[] = [];
         const siblingKeyCounts =
@@ -87,13 +100,13 @@ export class HierarchyTree {
                 matrixNode.value;
 
             const value =
-                this.formatHierarchyValue(rawValue);
+                this.formatHierarchyValue(
+                    rawValue,
+                    blankLabel
+                );
             const identity = matrixNode.identity;
 
-            if (
-                value === null ||
-                identity === undefined
-            ) {
+            if (identity === undefined) {
                 continue;
             }
 
@@ -101,9 +114,15 @@ export class HierarchyTree {
                 matrixNode.level ??
                 (parentNode?.level ?? -1) + 1;
 
+            const keyPart =
+                this.getHierarchyKeyPart(
+                    rawValue,
+                    value
+                );
+
             const pathParts = [
                 ...parentPathParts,
-                value
+                keyPart
             ];
 
             const baseKey =
@@ -136,7 +155,8 @@ export class HierarchyTree {
             node.children = this.buildNodes(
                 matrixNode.children ?? [],
                 node,
-                pathParts
+                pathParts,
+                blankLabel
             );
 
             hierarchyNodes.push(node);
@@ -146,13 +166,14 @@ export class HierarchyTree {
     }
 
     private formatHierarchyValue(
-        value: PrimitiveValue
-    ): string | null {
+        value: PrimitiveValue,
+        blankLabel: string
+    ): string {
         if (
             value === null ||
             value === undefined
         ) {
-            return null;
+            return blankLabel;
         }
 
         const formattedValue =
@@ -160,6 +181,21 @@ export class HierarchyTree {
 
         return formattedValue.length > 0
             ? formattedValue
-            : null;
+            : blankLabel;
+    }
+
+    private getHierarchyKeyPart(
+        rawValue: PrimitiveValue,
+        formattedValue: string
+    ): string {
+        if (
+            rawValue === null ||
+            rawValue === undefined ||
+            String(rawValue).trim().length === 0
+        ) {
+            return "__hierarchy_blank__";
+        }
+
+        return formattedValue;
     }
 }

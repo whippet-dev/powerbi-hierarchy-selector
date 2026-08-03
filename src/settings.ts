@@ -53,6 +53,16 @@ class SelectionCardSettings extends FormattingSettingsCard {
 }
 
 class ValuesCardSettings extends FormattingSettingsCard {
+    public blankValueLabel =
+        new formattingSettings.TextInput({
+            name: "blankValueLabel",
+            displayName: "Blank value label",
+            description:
+                "Set the label shown for genuine blank hierarchy values.",
+            value: "(No value)",
+            placeholder: "(No value)"
+        });
+
     public sortOrder =
         new formattingSettings.AutoDropdown({
             name: "sortOrder",
@@ -159,6 +169,7 @@ class ValuesCardSettings extends FormattingSettingsCard {
     public displayName: string = "Values";
 
     public slices: FormattingSettingsSlice[] = [
+        this.blankValueLabel,
         this.sortOrder,
         this.fontFamily,
         this.fontSize,

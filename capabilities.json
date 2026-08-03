@@ -54,6 +54,12 @@
         "values": {
             "displayName": "Values",
             "properties": {
+                "blankValueLabel": {
+                    "displayName": "Blank value label",
+                    "type": {
+                        "text": true
+                    }
+                },
                 "sortOrder": {
                     "displayName": "Sort order",
                     "type": {

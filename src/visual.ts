@@ -135,8 +135,26 @@ export class Visual implements IVisual {
             return;
         }
 
+        const configuredBlankValueLabel =
+            this.formattingSettings
+                .valuesCard
+                .blankValueLabel
+                .value;
+
+        const blankValueLabel =
+            typeof configuredBlankValueLabel ===
+                "string" &&
+            configuredBlankValueLabel
+                .trim()
+                .length > 0
+                ? configuredBlankValueLabel.trim()
+                : "(No value)";
+
         const rootNodes =
-            this.hierarchyTree.build(matrix);
+            this.hierarchyTree.build(
+                matrix,
+                blankValueLabel
+            );
 
         this.hierarchyLevels =
             this.hierarchyTree.getLevels(
