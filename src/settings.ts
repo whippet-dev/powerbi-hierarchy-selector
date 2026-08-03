@@ -517,6 +517,56 @@ class ClearControlsCardSettings
     ];
 }
 
+class TooltipCardSettings extends FormattingSettingsCard {
+    public hoverDelay =
+        new formattingSettings.NumUpDown({
+            name: "hoverDelay",
+            displayName: "Hover delay (ms)",
+            description:
+                "Set how long the pointer must remain over a value before its path tooltip appears.",
+            value: 700,
+            options: {
+                minValue: {
+                    type:
+                        powerbi.visuals.ValidatorType.Min,
+                    value: 0
+                },
+                maxValue: {
+                    type:
+                        powerbi.visuals.ValidatorType.Max,
+                    value: 2000
+                }
+            }
+        });
+
+    public showSelectionState =
+        new formattingSettings.ToggleSwitch({
+            name: "showSelectionState",
+            displayName: "Show selection state",
+            description:
+                "Include the value's selected, inherited, partial or alternative state in the visible tooltip.",
+            value: true
+        });
+
+    public showOnKeyboardFocus =
+        new formattingSettings.ToggleSwitch({
+            name: "showOnKeyboardFocus",
+            displayName: "Show on keyboard focus",
+            description:
+                "Show the visible path tooltip when a value receives keyboard focus. Screen-reader path descriptions remain available when this is off.",
+            value: true
+        });
+
+    public name: string = "pathTooltips";
+    public displayName: string = "Tooltips";
+
+    public slices: FormattingSettingsSlice[] = [
+        this.hoverDelay,
+        this.showSelectionState,
+        this.showOnKeyboardFocus
+    ];
+}
+
 class LayoutCardSettings extends FormattingSettingsCard {
     public visualPadding =
         new formattingSettings.NumUpDown({
@@ -653,6 +703,9 @@ export class VisualFormattingSettingsModel
     public clearControlsCard =
         new ClearControlsCardSettings();
 
+    public tooltipCard =
+        new TooltipCardSettings();
+
     public layoutCard =
         new LayoutCardSettings();
 
@@ -663,6 +716,7 @@ export class VisualFormattingSettingsModel
         this.headingsCard,
         this.levelContainersCard,
         this.clearControlsCard,
+        this.tooltipCard,
         this.layoutCard
     ];
 }

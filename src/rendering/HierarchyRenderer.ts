@@ -1,5 +1,6 @@
 "use strict";
 
+import powerbi from "powerbi-visuals-api";
 import {
     HierarchyNode
 } from "../models/hierarchy";
@@ -11,12 +12,35 @@ import type {
     HierarchyViewLevel
 } from "../view/HierarchyView";
 
+import ITooltipService =
+    powerbi.extensibility.ITooltipService;
+
+import VisualTooltipDataItem =
+    powerbi.extensibility.VisualTooltipDataItem;
+
 export class HierarchyRenderer {
     private readonly searchTerms =
         new Map<number, string>();
 
+    private descriptionId = 0;
+
+    private tooltipShowTimer:
+        number | undefined;
+
+    private tooltipVisible = false;
+
+    private tooltipHoverDelay = 700;
+
+    private showTooltipSelectionState = true;
+
+    private showTooltipOnKeyboardFocus = true;
+
     public constructor(
-        private readonly container: HTMLDivElement
+        private readonly container: HTMLDivElement,
+        private readonly tooltipService:
+            ITooltipService,
+        private readonly tooltipRoot:
+            HTMLElement
     ) {}
 
     public clearSearchTerms(): void {
@@ -36,8 +60,23 @@ export class HierarchyRenderer {
         multipleSelectionEnabled: boolean,
         showIncludedCounts: boolean,
         showSelectAll: boolean,
-        valueSortOrder: string
+        valueSortOrder: string,
+        tooltipHoverDelay: number,
+        showTooltipSelectionState: boolean,
+        showTooltipOnKeyboardFocus: boolean
     ): void {
+        this.hideTooltip();
+        this.descriptionId = 0;
+
+        this.tooltipHoverDelay =
+            tooltipHoverDelay;
+
+        this.showTooltipSelectionState =
+            showTooltipSelectionState;
+
+        this.showTooltipOnKeyboardFocus =
+            showTooltipOnKeyboardFocus;
+
         this.pruneSearchTerms(
             hierarchyLevels.length
         );
@@ -424,6 +463,7 @@ export class HierarchyRenderer {
     }
 
     public renderLandingPage(): void {
+        this.hideTooltip();
         this.searchTerms.clear();
         this.container.replaceChildren();
 
@@ -950,14 +990,22 @@ export class HierarchyRenderer {
             );
         }
 
+        const fullPath =
+            this.getNodePath(node);
+
+        let selectionDescription =
+            isAlternative
+                ? "Available on an alternative path"
+                : "Not selected";
+
         switch (selectionState) {
             case HierarchySelectionState.Explicit:
                 button.classList.add(
                     "hierarchy-level__value--selected"
                 );
 
-                button.title =
-                    `${node.value} — explicitly selected`;
+                selectionDescription =
+                    "Explicitly selected";
 
                 button.setAttribute(
                     "aria-label",
@@ -975,8 +1023,8 @@ export class HierarchyRenderer {
                     "hierarchy-level__value--partial"
                 );
 
-                button.title =
-                    `${node.value} contains selected values`;
+                selectionDescription =
+                    "Contains selected values";
 
                 button.setAttribute(
                     "aria-label",
@@ -1004,7 +1052,7 @@ export class HierarchyRenderer {
                         ? `${node.value} is included through ${inheritedFrom.value}`
                         : `${node.value} is included through a higher-level selection`;
 
-                button.title =
+                selectionDescription =
                     inheritedDescription;
 
                 button.setAttribute(
@@ -1020,8 +1068,6 @@ export class HierarchyRenderer {
             }
 
             default: {
-                button.title = node.value;
-
                 const accessibleLabel =
                     isAlternative &&
                     !multipleSelectionEnabled
@@ -1041,12 +1087,280 @@ export class HierarchyRenderer {
             }
         }
 
+        const description =
+            document.createElement("span");
+
+        const descriptionId =
+            `hierarchy-value-description-${++this.descriptionId}`;
+
+        description.id = descriptionId;
+        description.className =
+            "hierarchy-level__value-description";
+
+        description.textContent =
+            `Full path: ${fullPath}.`;
+
+        button.appendChild(description);
+
+        button.setAttribute(
+            "aria-describedby",
+            descriptionId
+        );
+
+        const tooltipData:
+            VisualTooltipDataItem[] = [
+                {
+                    displayName: "Full path",
+                    value: fullPath,
+                    header: node.value
+                }
+            ];
+
+        if (
+            this.showTooltipSelectionState
+        ) {
+            tooltipData.push({
+                displayName: "Selection",
+                value: selectionDescription
+            });
+        }
+
+        this.attachTooltip(
+            button,
+            tooltipData
+        );
+
         button.addEventListener(
             "click",
-            () => onNodeSelection(node)
+            () => {
+                this.hideTooltip();
+                onNodeSelection(node);
+            }
         );
 
         return button;
+    }
+
+    private getNodePath(
+        node: HierarchyNode
+    ): string {
+        const pathParts: string[] = [];
+
+        let currentNode:
+            HierarchyNode | null = node;
+
+        while (currentNode) {
+            pathParts.unshift(
+                currentNode.value
+            );
+
+            currentNode =
+                currentNode.parent;
+        }
+
+        return pathParts.join(" › ");
+    }
+
+    private attachTooltip(
+        button: HTMLButtonElement,
+        dataItems: VisualTooltipDataItem[]
+    ): void {
+        if (!this.tooltipService.enabled()) {
+            return;
+        }
+
+        let pointerCoordinates:
+            number[] = [0, 0];
+
+        button.addEventListener(
+            "mouseenter",
+            (event) => {
+                pointerCoordinates =
+                    this.getMouseCoordinates(
+                        event
+                    );
+
+                this.scheduleTooltip(
+                    pointerCoordinates,
+                    dataItems
+                );
+            }
+        );
+
+        button.addEventListener(
+            "mousemove",
+            (event) => {
+                pointerCoordinates =
+                    this.getMouseCoordinates(
+                        event
+                    );
+
+                if (this.tooltipVisible) {
+                    this.moveTooltip(
+                        pointerCoordinates,
+                        dataItems
+                    );
+                }
+            }
+        );
+
+        button.addEventListener(
+            "mouseleave",
+            () => this.hideTooltip()
+        );
+
+        button.addEventListener(
+            "focus",
+            () => {
+                if (
+                    !this.showTooltipOnKeyboardFocus
+                ) {
+                    return;
+                }
+
+                this.showTooltip(
+                    this.getElementCoordinates(
+                        button
+                    ),
+                    dataItems
+                );
+            }
+        );
+
+        button.addEventListener(
+            "blur",
+            () => this.hideTooltip()
+        );
+
+        button.addEventListener(
+            "keydown",
+            (event) => {
+                if (event.key === "Escape") {
+                    this.hideTooltip();
+                }
+            }
+        );
+    }
+
+    private scheduleTooltip(
+        coordinates: number[],
+        dataItems: VisualTooltipDataItem[]
+    ): void {
+        this.cancelTooltipTimer();
+
+        if (this.tooltipHoverDelay <= 0) {
+            this.showTooltip(
+                coordinates,
+                dataItems
+            );
+
+            return;
+        }
+
+        this.tooltipShowTimer =
+            window.setTimeout(
+                () => {
+                    this.tooltipShowTimer =
+                        undefined;
+
+                    this.showTooltip(
+                        coordinates,
+                        dataItems
+                    );
+                },
+                this.tooltipHoverDelay
+            );
+    }
+
+    private showTooltip(
+        coordinates: number[],
+        dataItems: VisualTooltipDataItem[]
+    ): void {
+        this.cancelTooltipTimer();
+
+        this.tooltipService.show({
+            coordinates,
+            isTouchEvent: false,
+            identities: [],
+            dataItems
+        });
+
+        this.tooltipVisible = true;
+    }
+
+    private moveTooltip(
+        coordinates: number[],
+        dataItems: VisualTooltipDataItem[]
+    ): void {
+        this.tooltipService.move({
+            coordinates,
+            isTouchEvent: false,
+            identities: [],
+            dataItems
+        });
+    }
+
+    private cancelTooltipTimer(): void {
+        if (
+            this.tooltipShowTimer ===
+            undefined
+        ) {
+            return;
+        }
+
+        window.clearTimeout(
+            this.tooltipShowTimer
+        );
+
+        this.tooltipShowTimer =
+            undefined;
+    }
+
+    private getMouseCoordinates(
+        event: MouseEvent
+    ): number[] {
+        const rootBounds =
+            this.tooltipRoot
+                .getBoundingClientRect();
+
+        return [
+            event.clientX - rootBounds.left,
+            event.clientY - rootBounds.top
+        ];
+    }
+
+    private getElementCoordinates(
+        element: HTMLElement
+    ): number[] {
+        const rootBounds =
+            this.tooltipRoot
+                .getBoundingClientRect();
+
+        const elementBounds =
+            element.getBoundingClientRect();
+
+        return [
+            elementBounds.left -
+                rootBounds.left +
+                elementBounds.width / 2,
+            elementBounds.top -
+                rootBounds.top +
+                elementBounds.height / 2
+        ];
+    }
+
+    private hideTooltip(): void {
+        this.cancelTooltipTimer();
+        this.tooltipVisible = false;
+
+        if (!this.tooltipService.enabled()) {
+            return;
+        }
+
+        this.tooltipService.hide({
+            isTouchEvent: false,
+            immediately: true
+        });
     }
 
     private pruneSearchTerms(

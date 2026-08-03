@@ -303,6 +303,29 @@
                 }
             }
         },
+        "pathTooltips": {
+            "displayName": "Tooltips",
+            "properties": {
+                "hoverDelay": {
+                    "displayName": "Hover delay (ms)",
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "showSelectionState": {
+                    "displayName": "Show selection state",
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "showOnKeyboardFocus": {
+                    "displayName": "Show on keyboard focus",
+                    "type": {
+                        "bool": true
+                    }
+                }
+            }
+        },
         "layout": {
             "displayName": "Layout",
             "properties": {
@@ -368,6 +391,12 @@
             }
         }
     ],
+    "tooltips": {
+        "supportedTypes": {
+            "default": true,
+            "canvas": false
+        }
+    },
     "supportsLandingPage": true,
     "supportsEmptyDataView": true,
     "privileges": []

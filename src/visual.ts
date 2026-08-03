@@ -68,7 +68,9 @@ export class Visual implements IVisual {
         this.hierarchyView = new HierarchyView();
 
         this.renderer = new HierarchyRenderer(
-            this.container
+            this.container,
+            options.host.tooltipService,
+            options.element
         );
 
         this.filterService =
@@ -644,7 +646,23 @@ export class Visual implements IVisual {
                 .selectionCard
                 .showSelectAll
                 .value,
-            valueSortOrder
+            valueSortOrder,
+            this.clampNumber(
+                this.formattingSettings
+                    .tooltipCard
+                    .hoverDelay
+                    .value,
+                0,
+                2000
+            ),
+            this.formattingSettings
+                .tooltipCard
+                .showSelectionState
+                .value,
+            this.formattingSettings
+                .tooltipCard
+                .showOnKeyboardFocus
+                .value
         );
     }
 
