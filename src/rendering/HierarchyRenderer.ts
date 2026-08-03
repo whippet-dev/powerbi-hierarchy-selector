@@ -1,10 +1,12 @@
 "use strict";
 
 import {
-    HierarchyLevel,
     HierarchyNode
 } from "../models/hierarchy";
 import { HierarchySelection } from "../selection/HierarchySelection";
+import type {
+    HierarchyViewLevel
+} from "../view/HierarchyView";
 
 export class HierarchyRenderer {
     public constructor(
@@ -12,7 +14,7 @@ export class HierarchyRenderer {
     ) {}
 
     public render(
-        hierarchyLevels: HierarchyLevel[],
+        hierarchyLevels: HierarchyViewLevel[],
         selection: HierarchySelection,
         onNodeSelection: (node: HierarchyNode) => void,
         onClearAll: () => void,
@@ -20,10 +22,13 @@ export class HierarchyRenderer {
     ): void {
         this.container.replaceChildren();
 
-        const hasSelection =
+        const selectedPath =
             selection.getSelectedPath(
                 hierarchyLevels
-            ).length > 0;
+            );
+
+        const hasSelection =
+            selectedPath.length > 0;
 
         const toolbar =
             document.createElement("div");
@@ -145,12 +150,31 @@ export class HierarchyRenderer {
                     emptyMessage
                 );
             } else {
+                let alternativeDividerAdded = false;
+
                 for (const node of hierarchyLevel.nodes) {
+                    const isAlternative =
+                        !hierarchyLevel
+                            .compatibleNodeKeys
+                            .has(node.key);
+
+                    if (
+                        isAlternative &&
+                        !alternativeDividerAdded
+                    ) {
+                        valuesContainer.appendChild(
+                            this.createAlternativeDivider()
+                        );
+
+                        alternativeDividerAdded = true;
+                    }
+
                     valuesContainer.appendChild(
                         this.createValueButton(
                             node,
                             selection,
-                            onNodeSelection
+                            onNodeSelection,
+                            isAlternative
                         )
                     );
                 }
@@ -198,10 +222,23 @@ export class HierarchyRenderer {
         this.container.appendChild(landingPage);
     }
 
+    private createAlternativeDivider(): HTMLDivElement {
+        const divider =
+            document.createElement("div");
+
+        divider.className =
+            "hierarchy-level__alternative-divider";
+
+        divider.setAttribute("role", "separator");
+
+        return divider;
+    }
+
     private createValueButton(
         node: HierarchyNode,
         selection: HierarchySelection,
-        onNodeSelection: (node: HierarchyNode) => void
+        onNodeSelection: (node: HierarchyNode) => void,
+        isAlternative: boolean
     ): HTMLButtonElement {
         const button =
             document.createElement("button");
@@ -209,20 +246,38 @@ export class HierarchyRenderer {
         const isSelected =
             selection.isSelected(node);
 
-        button.className = "hierarchy-level__value";
+        button.className =
+            "hierarchy-level__value";
+
         button.type = "button";
         button.textContent = node.value;
-        button.title = node.value;
 
         button.dataset.nodeKey = node.key;
-        button.dataset.level = node.level.toString();
+        button.dataset.level =
+            node.level.toString();
 
-        button.setAttribute(
-            "aria-label",
-            isSelected
-                ? `Deselect ${node.value}`
-                : `Select ${node.value}`
-        );
+        if (isAlternative) {
+            button.classList.add(
+                "hierarchy-level__value--alternative"
+            );
+
+            button.title =
+                `Switch hierarchy to ${node.value}`;
+
+            button.setAttribute(
+                "aria-label",
+                `Switch hierarchy to ${node.value}`
+            );
+        } else {
+            button.title = node.value;
+
+            button.setAttribute(
+                "aria-label",
+                isSelected
+                    ? `Deselect ${node.value}`
+                    : `Select ${node.value}`
+            );
+        }
 
         button.setAttribute(
             "aria-pressed",

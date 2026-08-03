@@ -6,32 +6,87 @@ import {
 } from "../models/hierarchy";
 import { HierarchySelection } from "../selection/HierarchySelection";
 
+export interface HierarchyViewLevel extends HierarchyLevel {
+    compatibleNodeKeys: ReadonlySet<string>;
+}
+
 export class HierarchyView {
     public getVisibleLevels(
         hierarchyLevels: HierarchyLevel[],
         selection: HierarchySelection
-    ): HierarchyLevel[] {
+    ): HierarchyViewLevel[] {
         return hierarchyLevels.map(
-            (level, levelIndex) => ({
-                name: level.name,
-                nodes: this.getVisibleNodes(
-                    hierarchyLevels,
-                    selection,
-                    levelIndex
-                )
-            })
+            (level, levelIndex) => {
+                const compatibleNodes =
+                    this.getCompatibleNodes(
+                        hierarchyLevels,
+                        selection,
+                        levelIndex
+                    );
+
+                const compatibleNodeKeys =
+                    new Set<string>(
+                        compatibleNodes.map(
+                            (node) => node.key
+                        )
+                    );
+
+                const incompatibleNodes =
+                    level.nodes.filter(
+                        (node) =>
+                            !compatibleNodeKeys.has(
+                                node.key
+                            )
+                    );
+
+                return {
+                    name: level.name,
+                    nodes: [
+                        ...compatibleNodes,
+                        ...incompatibleNodes
+                    ],
+                    compatibleNodeKeys
+                };
+            }
         );
     }
 
-    private getVisibleNodes(
+    private getCompatibleNodes(
         hierarchyLevels: HierarchyLevel[],
         selection: HierarchySelection,
         targetLevel: number
     ): HierarchyNode[] {
-        if (targetLevel === 0) {
-            return hierarchyLevels[0]?.nodes ?? [];
+        const hierarchyLevel =
+            hierarchyLevels[targetLevel];
+
+        if (!hierarchyLevel) {
+            return [];
         }
 
+        const selectedKey =
+            selection.getSelectedKey(targetLevel);
+
+        /*
+         * Once this level has a selection, that selected node is the
+         * active value. Every other value remains available as an
+         * alternative branch.
+         */
+        if (selectedKey !== undefined) {
+            const selectedNode =
+                hierarchyLevel.nodes.find(
+                    (node) =>
+                        node.key === selectedKey
+                );
+
+            return selectedNode
+                ? [selectedNode]
+                : [];
+        }
+
+        /*
+         * With no selected ancestor, every value at this level is
+         * compatible and retains its existing alphabetical order.
+         */
         const selectedAncestor =
             this.getDeepestSelectedAncestor(
                 hierarchyLevels,
@@ -40,9 +95,14 @@ export class HierarchyView {
             );
 
         if (!selectedAncestor) {
-            return hierarchyLevels[targetLevel]?.nodes ?? [];
+            return hierarchyLevel.nodes;
         }
 
+        /*
+         * For an unselected descendant level, values belonging to the
+         * deepest selected branch are compatible. All remaining values
+         * are still rendered afterwards as alternative branches.
+         */
         return this.getDescendantsAtLevel(
             selectedAncestor,
             targetLevel
@@ -68,7 +128,8 @@ export class HierarchyView {
 
             const selectedNode =
                 hierarchyLevels[levelIndex]?.nodes.find(
-                    (node) => node.key === selectedKey
+                    (node) =>
+                        node.key === selectedKey
                 );
 
             if (selectedNode) {
@@ -104,8 +165,11 @@ export class HierarchyView {
             visit(child);
         }
 
-        return matchingNodes.sort((first, second) =>
-            first.value.localeCompare(second.value)
+        return matchingNodes.sort(
+            (first, second) =>
+                first.value.localeCompare(
+                    second.value
+                )
         );
     }
 }
