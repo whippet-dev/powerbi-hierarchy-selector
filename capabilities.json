@@ -304,7 +304,7 @@
             }
         },
         "pathTooltips": {
-            "displayName": "Tooltips",
+            "displayName": "Tooltips (style under General)",
             "properties": {
                 "hoverDelay": {
                     "displayName": "Hover delay (ms)",
