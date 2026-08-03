@@ -339,6 +339,13 @@ export class HierarchyRenderer {
                             valueSortOrder
                         );
 
+                        if (selectedContainer) {
+                            scrollContainer.insertBefore(
+                                selectedContainer,
+                                scrollContainer.firstChild
+                            );
+                        }
+
                         if (selectAllButton) {
                             this.updateSelectAllButton(
                                 selectAllButton,
@@ -394,13 +401,6 @@ export class HierarchyRenderer {
                 ) {
                     valuesContainer.insertBefore(
                         controlsContainer,
-                        scrollContainer
-                    );
-                }
-
-                if (selectedContainer) {
-                    valuesContainer.insertBefore(
-                        selectedContainer,
                         scrollContainer
                     );
                 }
@@ -651,6 +651,9 @@ export class HierarchyRenderer {
         selection: HierarchySelection,
         searchTerm: string
     ): HierarchyNode[] {
+        const isSearchActive =
+            searchTerm.trim().length > 0;
+
         return this.getBulkSelectionCandidates(
             hierarchyLevel,
             searchTerm
@@ -667,7 +670,13 @@ export class HierarchyRenderer {
                             .Unselected ||
                     selectionState ===
                         HierarchySelectionState
-                            .Partial
+                            .Partial ||
+                    (
+                        isSearchActive &&
+                        selectionState ===
+                            HierarchySelectionState
+                                .Inherited
+                    )
                 );
             }
         );

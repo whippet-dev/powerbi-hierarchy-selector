@@ -250,7 +250,10 @@ export class HierarchySelection {
                                 .Unselected ||
                         selectionState ===
                             HierarchySelectionState
-                                .Partial
+                                .Partial ||
+                        selectionState ===
+                            HierarchySelectionState
+                                .Inherited
                     );
                 }
             );
@@ -262,6 +265,22 @@ export class HierarchySelection {
         const currentEndpoints =
             this.getSelectedEndpoints(levels);
 
+        const retainedEndpoints =
+            currentEndpoints.filter(
+                (endpoint) =>
+                    !actionableNodes.some(
+                        (node) =>
+                            this.isSameNodeOrDescendant(
+                                endpoint,
+                                node
+                            ) ||
+                            this.isSameNodeOrDescendant(
+                                node,
+                                endpoint
+                            )
+                    )
+            );
+
         this.lastSelectedEndpointKey =
             actionableNodes[
                 actionableNodes.length - 1
@@ -269,7 +288,7 @@ export class HierarchySelection {
 
         this.setEndpoints(
             [
-                ...currentEndpoints,
+                ...retainedEndpoints,
                 ...actionableNodes
             ],
             levels
