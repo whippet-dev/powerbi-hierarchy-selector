@@ -23,7 +23,8 @@ export class HierarchyRenderer {
         onClearAll: () => void,
         onLevelClear: (levelIndex: number) => void,
         showSearchBoxes: boolean,
-        minimumValuesForSearch: number
+        minimumValuesForSearch: number,
+        showClearAll: boolean
     ): void {
         this.pruneSearchTerms(
             hierarchyLevels.length
@@ -42,36 +43,6 @@ export class HierarchyRenderer {
 
         const hasSelection =
             selectedPath.length > 0;
-
-        const toolbar =
-            document.createElement("div");
-
-        toolbar.className =
-            "hierarchy-selector__toolbar";
-
-        const clearAllButton =
-            document.createElement("button");
-
-        clearAllButton.className =
-            "hierarchy-selector__clear-all";
-
-        clearAllButton.type = "button";
-        clearAllButton.textContent = "Clear all";
-        clearAllButton.title =
-            "Clear all field selections";
-        clearAllButton.disabled = !hasSelection;
-
-        clearAllButton.setAttribute(
-            "aria-label",
-            "Clear all field selections"
-        );
-
-        clearAllButton.addEventListener(
-            "click",
-            onClearAll
-        );
-
-        toolbar.appendChild(clearAllButton);
 
         const levelsContainer =
             document.createElement("div");
@@ -157,6 +128,43 @@ export class HierarchyRenderer {
 
                 header.appendChild(
                     clearLevelButton
+                );
+            }
+
+            const isLastField =
+                levelIndex ===
+                hierarchyLevels.length - 1;
+
+            if (
+                isLastField &&
+                showClearAll &&
+                hasSelection
+            ) {
+                const clearAllButton =
+                    document.createElement("button");
+
+                clearAllButton.className =
+                    "hierarchy-selector__clear-all";
+
+                clearAllButton.type = "button";
+                clearAllButton.textContent =
+                    "Clear all";
+
+                clearAllButton.title =
+                    "Clear all field selections";
+
+                clearAllButton.setAttribute(
+                    "aria-label",
+                    "Clear all field selections"
+                );
+
+                clearAllButton.addEventListener(
+                    "click",
+                    onClearAll
+                );
+
+                header.appendChild(
+                    clearAllButton
                 );
             }
 
@@ -274,7 +282,6 @@ export class HierarchyRenderer {
             );
         }
 
-        this.container.appendChild(toolbar);
         this.container.appendChild(
             levelsContainer
         );

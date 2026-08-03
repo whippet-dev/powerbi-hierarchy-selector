@@ -93,7 +93,7 @@ class ValuesCardSettings extends FormattingSettingsCard {
             displayName: "Gap between values",
             description:
                 "Set the vertical spacing between field value buttons.",
-            value: 4,
+            value: 2,
             options: {
                 minValue: {
                     type:
@@ -354,7 +354,7 @@ class LevelContainersCardSettings
             displayName: "Inner padding",
             description:
                 "Set the space between a field container's border and its field values.",
-            value: 4,
+            value: 2,
             options: {
                 minValue: {
                     type:
@@ -465,7 +465,7 @@ class LayoutCardSettings extends FormattingSettingsCard {
             displayName: "Visual padding",
             description:
                 "Set the space between the edge of the visual and its selector content.",
-            value: 12,
+            value: 6,
             options: {
                 minValue: {
                     type:
@@ -486,7 +486,7 @@ class LayoutCardSettings extends FormattingSettingsCard {
             displayName: "Gap between fields",
             description:
                 "Set the horizontal spacing between field columns.",
-            value: 12,
+            value: 8,
             options: {
                 minValue: {
                     type:
@@ -557,7 +557,7 @@ class LayoutCardSettings extends FormattingSettingsCard {
             name: "showClearAll",
             displayName: "Show Clear all",
             description:
-                "Show or hide the Clear all control above the fields.",
+                "Show or hide Clear all alongside the field headings.",
             value: true
         });
 

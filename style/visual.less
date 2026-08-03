@@ -5,9 +5,9 @@
     height: 100%;
     min-height: 0;
     flex-direction: column;
-    gap: 6px;
+    gap: 0;
     padding:
-        var(--hierarchy-visual-padding, 12px);
+        var(--hierarchy-visual-padding, 6px);
     overflow: hidden;
     font-family:
         var(
@@ -17,27 +17,11 @@
         );
 }
 
-.hierarchy-selector--hide-clear-all {
-    gap: 0;
-}
-
-.hierarchy-selector--hide-clear-all
-.hierarchy-selector__toolbar {
-    display: none;
-}
-
-.hierarchy-selector__toolbar {
-    display: flex;
-    min-height: 26px;
-    flex: 0 0 auto;
-    align-items: center;
-    justify-content: flex-end;
-}
-
 .hierarchy-selector__clear-all {
     box-sizing: border-box;
-    min-height: 26px;
-    padding: 3px 8px;
+    min-height: 22px;
+    flex: 0 0 auto;
+    padding: 2px 6px;
     border: 1px solid transparent;
     border-radius: 4px;
     background: transparent;
@@ -54,20 +38,17 @@
             --hierarchy-clear-all-font-size,
             12px
         );
+    line-height: 1.2;
+    white-space: nowrap;
     cursor: pointer;
 }
 
-.hierarchy-selector__clear-all:hover:not(:disabled) {
+.hierarchy-selector__clear-all:hover {
     background:
         var(
             --hierarchy-clear-hover-background,
             #f0f0f0
         );
-}
-
-.hierarchy-selector__clear-all:disabled {
-    opacity: 0.45;
-    cursor: default;
 }
 
 .hierarchy-selector__clear-all:focus-visible {
@@ -82,8 +63,9 @@
     flex: 1 1 auto;
     align-items: stretch;
     gap:
-        var(--hierarchy-level-gap, 12px);
-    overflow: auto;
+        var(--hierarchy-level-gap, 8px);
+    overflow-x: auto;
+    overflow-y: hidden;
 }
 
 .hierarchy-level {
@@ -93,7 +75,7 @@
         var(--hierarchy-level-min-width, 160px);
     flex: 1 1 0;
     flex-direction: column;
-    gap: 6px;
+    gap: 3px;
 }
 
 .hierarchy-level__header {
@@ -168,9 +150,9 @@
     flex: 1 1 auto;
     flex-direction: column;
     gap:
-        var(--hierarchy-value-gap, 4px);
+        var(--hierarchy-value-gap, 2px);
     padding:
-        var(--hierarchy-container-padding, 4px);
+        var(--hierarchy-container-padding, 2px);
     overflow: hidden;
     border-style: solid;
     border-width:
@@ -201,7 +183,7 @@
     flex: 0 0 auto;
     flex-direction: column;
     gap:
-        var(--hierarchy-value-gap, 4px);
+        var(--hierarchy-value-gap, 2px);
 }
 
 .hierarchy-level__search {
@@ -257,7 +239,7 @@
     flex: 1 1 auto;
     flex-direction: column;
     gap:
-        var(--hierarchy-value-gap, 4px);
+        var(--hierarchy-value-gap, 2px);
     overflow-y: auto;
 }
 

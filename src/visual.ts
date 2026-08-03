@@ -481,10 +481,6 @@ export class Visual implements IVisual {
             )}px`
         );
 
-        this.container.classList.toggle(
-            "hierarchy-selector--hide-clear-all",
-            !layout.showClearAll.value
-        );
     }
 
     private render(): void {
@@ -514,7 +510,11 @@ export class Visual implements IVisual {
                     .value,
                 1,
                 10000
-            )
+            ),
+            this.formattingSettings
+                .layoutCard
+                .showClearAll
+                .value
         );
     }
 

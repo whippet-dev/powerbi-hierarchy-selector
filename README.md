@@ -14,6 +14,7 @@ The fields do not need to be configured as a formal Power BI hierarchy.
 ## Current features
 
 - Multiple related fields displayed in one selector
+- Space-efficient column layout for dashboard headers
 - Context-aware values across fields
 - Search automatically shown for fields with enough values
 - Global search visibility toggle and configurable value threshold
