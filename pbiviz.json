@@ -1,13 +1,13 @@
 {
     "visual": {
         "name": "hierarchySelector",
-        "displayName": "HierarchySelector",
+        "displayName": "Multi-Field Selector",
         "guid": "hierarchySelector91C06B93F80548E6A8D87B1480DF361C",
         "visualClassName": "Visual",
         "version": "1.0.0.0",
-        "description": "A modern, flexible visual for navigating and filtering hierarchical data.",
-        "supportUrl": "https://github.com/Whippet-Dev/HierarchySelector",
-        "gitHubUrl": ""
+        "description": "Select and filter across multiple related fields in one visual.",
+        "supportUrl": "https://github.com/whippet-dev/powerbi-multi-field-selector",
+        "gitHubUrl": "https://github.com/whippet-dev/powerbi-multi-field-selector"
     },
     "apiVersion": "5.11.0",
     "author": {

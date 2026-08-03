@@ -45,13 +45,13 @@ export class HierarchyRenderer {
         clearAllButton.type = "button";
         clearAllButton.textContent = "Clear all";
         clearAllButton.title =
-            "Clear all hierarchy selections";
+            "Clear all field selections";
 
         clearAllButton.disabled = !hasSelection;
 
         clearAllButton.setAttribute(
             "aria-label",
-            "Clear all hierarchy selections"
+            "Clear all field selections"
         );
 
         clearAllButton.addEventListener(
@@ -205,7 +205,7 @@ export class HierarchyRenderer {
         heading.className =
             "hierarchy-selector__landing-heading";
 
-        heading.textContent = "Build a hierarchy";
+        heading.textContent = "Build a multi-field selector";
 
         const instructions =
             document.createElement("div");
@@ -214,7 +214,7 @@ export class HierarchyRenderer {
             "hierarchy-selector__landing-text";
 
         instructions.textContent =
-            "Add fields to Hierarchy levels.";
+            "Add one or more related fields to get started.";
 
         landingPage.appendChild(heading);
         landingPage.appendChild(instructions);
@@ -262,11 +262,11 @@ export class HierarchyRenderer {
             );
 
             button.title =
-                `Switch hierarchy to ${node.value}`;
+                `Switch selection path to ${node.value}`;
 
             button.setAttribute(
                 "aria-label",
-                `Switch hierarchy to ${node.value}`
+                `Switch selection path to ${node.value}`
             );
         } else {
             button.title = node.value;

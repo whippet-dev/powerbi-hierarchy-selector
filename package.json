@@ -1,9 +1,9 @@
 {
-  "name": "powerbi-hierarchy-selector",
-  "description": "A Power BI custom visual for hierarchical navigation and filtering.",
+  "name": "powerbi-multi-field-selector",
+  "description": "A Power BI custom visual for selecting and filtering across multiple related fields.",
   "repository": {
     "type": "git",
-    "url": "https://github.com/whippet-dev/powerbi-hierarchy-selector.git"
+    "url": "https://github.com/whippet-dev/powerbi-multi-field-selector.git"
   },
   "license": "MIT",
   "scripts": {

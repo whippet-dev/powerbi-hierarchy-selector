@@ -20,7 +20,7 @@ class ValuesCardSettings extends FormattingSettingsCard {
             name: "fontFamily",
             displayName: "Value font",
             description:
-                "Choose the font family used for hierarchy value buttons.",
+                "Choose the font family used for field value buttons.",
             value: "Arial, sans-serif"
         });
 
@@ -29,7 +29,7 @@ class ValuesCardSettings extends FormattingSettingsCard {
             name: "fontSize",
             displayName: "Value text size",
             description:
-                "Set the text size used for hierarchy values, from 8 to 28 pixels.",
+                "Set the text size used for field values, from 8 to 28 pixels.",
             value: 12,
             options: {
                 minValue: {
@@ -71,7 +71,7 @@ class ValuesCardSettings extends FormattingSettingsCard {
             name: "buttonRadius",
             displayName: "Value corner radius",
             description:
-                "Round the corners of hierarchy value buttons. Use 0 for square corners.",
+                "Round the corners of field value buttons. Use 0 for square corners.",
             value: 4,
             options: {
                 minValue: {
@@ -92,7 +92,7 @@ class ValuesCardSettings extends FormattingSettingsCard {
             name: "buttonGap",
             displayName: "Gap between values",
             description:
-                "Set the vertical spacing between hierarchy value buttons.",
+                "Set the vertical spacing between field value buttons.",
             value: 4,
             options: {
                 minValue: {
@@ -126,7 +126,7 @@ class ColoursCardSettings extends FormattingSettingsCard {
             name: "valueText",
             displayName: "Value text",
             description:
-                "Set the text colour used by normal hierarchy values.",
+                "Set the text colour used by normal field values.",
             value: {
                 value: "#242424"
             }
@@ -148,7 +148,7 @@ class ColoursCardSettings extends FormattingSettingsCard {
             name: "selectedText",
             displayName: "Selected text",
             description:
-                "Set the text colour used by selected hierarchy values.",
+                "Set the text colour used by selected field values.",
             value: {
                 value: "#242424"
             }
@@ -159,7 +159,7 @@ class ColoursCardSettings extends FormattingSettingsCard {
             name: "selectedBackground",
             displayName: "Selected background",
             description:
-                "Set the background colour used to highlight selected hierarchy values.",
+                "Set the background colour used to highlight selected field values.",
             value: {
                 value: "#E1DFDD"
             }
@@ -170,7 +170,7 @@ class ColoursCardSettings extends FormattingSettingsCard {
             name: "alternativeText",
             displayName: "Alternative text",
             description:
-                "Set the text colour of values outside the currently active hierarchy branch.",
+                "Set the text colour of values outside the currently active selection path.",
             value: {
                 value: "#6B6B6B"
             }
@@ -181,7 +181,7 @@ class ColoursCardSettings extends FormattingSettingsCard {
             name: "alternativeOpacity",
             displayName: "Alternative opacity",
             description:
-                "Set how strongly values outside the active hierarchy branch are muted, from 10% to 100%.",
+                "Set how strongly values outside the active selection path are muted, from 10% to 100%.",
             value: 65,
             options: {
                 minValue: {
@@ -228,7 +228,7 @@ class HeadingsCardSettings extends FormattingSettingsCard {
             name: "fontFamily",
             displayName: "Heading font",
             description:
-                "Choose the font family used for hierarchy level headings.",
+                "Choose the font family used for field headings.",
             value: "Arial, sans-serif"
         });
 
@@ -237,7 +237,7 @@ class HeadingsCardSettings extends FormattingSettingsCard {
             name: "fontSize",
             displayName: "Heading text size",
             description:
-                "Set the text size used for hierarchy level headings, from 8 to 28 pixels.",
+                "Set the text size used for field headings, from 8 to 28 pixels.",
             value: 12,
             options: {
                 minValue: {
@@ -258,7 +258,7 @@ class HeadingsCardSettings extends FormattingSettingsCard {
             name: "bold",
             displayName: "Bold headings",
             description:
-                "Use a bold font weight for hierarchy level headings.",
+                "Use a bold font weight for field headings.",
             value: true
         });
 
@@ -267,7 +267,7 @@ class HeadingsCardSettings extends FormattingSettingsCard {
             name: "textColour",
             displayName: "Heading text",
             description:
-                "Set the text colour used by hierarchy level headings.",
+                "Set the text colour used by field headings.",
             value: {
                 value: "#242424"
             }
@@ -291,7 +291,7 @@ class LevelContainersCardSettings
             name: "showBackground",
             displayName: "Show background",
             description:
-                "Show a background colour behind each hierarchy level's value list.",
+                "Show a background colour behind each field's value list.",
             value: false
         });
 
@@ -300,7 +300,7 @@ class LevelContainersCardSettings
             name: "backgroundColour",
             displayName: "Background",
             description:
-                "Set the background colour used behind each hierarchy level's value list.",
+                "Set the background colour used behind each field's value list.",
             value: {
                 value: "#FFFFFF"
             }
@@ -311,7 +311,7 @@ class LevelContainersCardSettings
             name: "borderWidth",
             displayName: "Border width",
             description:
-                "Set the width of the border around each hierarchy level's value list. Use 0 to hide the border.",
+                "Set the width of the border around each field's value list. Use 0 to hide the border.",
             value: 1,
             options: {
                 minValue: {
@@ -332,7 +332,7 @@ class LevelContainersCardSettings
             name: "cornerRadius",
             displayName: "Corner radius",
             description:
-                "Round the corners of each hierarchy level container. Use 0 for square corners.",
+                "Round the corners of each field container. Use 0 for square corners.",
             value: 4,
             options: {
                 minValue: {
@@ -353,7 +353,7 @@ class LevelContainersCardSettings
             name: "innerPadding",
             displayName: "Inner padding",
             description:
-                "Set the space between a level container's border and its hierarchy values.",
+                "Set the space between a level container's border and its field values.",
             value: 4,
             options: {
                 minValue: {
@@ -370,7 +370,7 @@ class LevelContainersCardSettings
         });
 
     public name: string = "levelContainers";
-    public displayName: string = "Level containers";
+    public displayName: string = "Field containers";
 
     public slices: FormattingSettingsSlice[] = [
         this.showBackground,
@@ -429,9 +429,9 @@ class ClearControlsCardSettings
     public levelIconSize =
         new formattingSettings.NumUpDown({
             name: "levelIconSize",
-            displayName: "Level clear icon size",
+            displayName: "Field clear icon size",
             description:
-                "Set the size of the clear icon shown beside a selected hierarchy level.",
+                "Set the size of the clear icon shown beside a selected field.",
             value: 18,
             options: {
                 minValue: {
@@ -464,7 +464,7 @@ class LayoutCardSettings extends FormattingSettingsCard {
             name: "visualPadding",
             displayName: "Visual padding",
             description:
-                "Set the space between the edge of the visual and its hierarchy content.",
+                "Set the space between the edge of the visual and its selector content.",
             value: 12,
             options: {
                 minValue: {
@@ -483,9 +483,9 @@ class LayoutCardSettings extends FormattingSettingsCard {
     public levelGap =
         new formattingSettings.NumUpDown({
             name: "levelGap",
-            displayName: "Gap between levels",
+            displayName: "Gap between fields",
             description:
-                "Set the horizontal spacing between hierarchy level columns.",
+                "Set the horizontal spacing between field columns.",
             value: 12,
             options: {
                 minValue: {
@@ -504,9 +504,9 @@ class LayoutCardSettings extends FormattingSettingsCard {
     public minimumLevelWidth =
         new formattingSettings.NumUpDown({
             name: "minimumLevelWidth",
-            displayName: "Minimum level width",
+            displayName: "Minimum field width",
             description:
-                "Set the minimum width of each hierarchy level. Wider levels may introduce horizontal scrolling.",
+                "Set the minimum width of each field. Wider fields may introduce horizontal scrolling.",
             value: 160,
             options: {
                 minValue: {

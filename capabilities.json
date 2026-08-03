@@ -1,7 +1,7 @@
 {
     "dataRoles": [
         {
-            "displayName": "Hierarchy levels",
+            "displayName": "Fields",
             "name": "hierarchy",
             "kind": "Grouping"
         }
@@ -165,7 +165,7 @@
             }
         },
         "levelContainers": {
-            "displayName": "Level containers",
+            "displayName": "Field containers",
             "properties": {
                 "showBackground": {
                     "displayName": "Show background",
@@ -235,7 +235,7 @@
                     }
                 },
                 "levelIconSize": {
-                    "displayName": "Level clear icon size",
+                    "displayName": "Field clear icon size",
                     "type": {
                         "formatting": {
                             "fontSize": true
@@ -254,13 +254,13 @@
                     }
                 },
                 "levelGap": {
-                    "displayName": "Gap between levels",
+                    "displayName": "Gap between fields",
                     "type": {
                         "numeric": true
                     }
                 },
                 "minimumLevelWidth": {
-                    "displayName": "Minimum level width",
+                    "displayName": "Minimum field width",
                     "type": {
                         "numeric": true
                     }
