@@ -49,16 +49,16 @@ export class HierarchyFilterService {
     }
 
     public apply(
-        selectedPath: HierarchyNode[]
+        selectedEndpoints: HierarchyNode[]
     ): void {
-        if (selectedPath.length === 0) {
+        if (selectedEndpoints.length === 0) {
             this.clear();
             return;
         }
 
         const hierarchyData =
-            this.createSingleSelectionTree(
-                selectedPath
+            this.createSelectionTree(
+                selectedEndpoints
             );
 
         const filter =
@@ -77,20 +77,41 @@ export class HierarchyFilterService {
         );
     }
 
-    public readSelectedNode(
+    public readSelectedNodes(
         filters: powerbi.IFilter[] | undefined,
         rootNodes: HierarchyNode[]
-    ): HierarchyNode | null {
+    ): HierarchyNode[] {
         const hierarchyData =
             this.readHierarchyData(filters);
 
         if (hierarchyData === null) {
-            return null;
+            return [];
         }
 
-        return this.findDeepestSelectedNode(
+        const selectedNodes:
+            HierarchyNode[] = [];
+
+        this.collectSelectedNodes(
             hierarchyData,
-            rootNodes
+            rootNodes,
+            selectedNodes
+        );
+
+        return selectedNodes;
+    }
+
+    public readSelectedNode(
+        filters: powerbi.IFilter[] | undefined,
+        rootNodes: HierarchyNode[]
+    ): HierarchyNode | null {
+        return (
+            this.readSelectedNodes(
+                filters,
+                rootNodes
+            ).sort(
+                (first, second) =>
+                    second.level - first.level
+            )[0] ?? null
         );
     }
 
@@ -154,6 +175,47 @@ export class HierarchyFilterService {
         );
     }
 
+    public identityCollectionsEqual(
+        first:
+            CustomVisualOpaqueIdentity[] | null,
+        second:
+            CustomVisualOpaqueIdentity[] | null
+    ): boolean {
+        if (first === null || second === null) {
+            return first === second;
+        }
+
+        if (first.length !== second.length) {
+            return false;
+        }
+
+        const unmatchedSecond = [
+            ...second
+        ];
+
+        for (const firstIdentity of first) {
+            const matchingIndex =
+                unmatchedSecond.findIndex(
+                    (secondIdentity) =>
+                        this.compareIdentities(
+                            firstIdentity,
+                            secondIdentity
+                        )
+                );
+
+            if (matchingIndex === -1) {
+                return false;
+            }
+
+            unmatchedSecond.splice(
+                matchingIndex,
+                1
+            );
+        }
+
+        return unmatchedSecond.length === 0;
+    }
+
     public clear(): void {
         this.host.applyJsonFilter(
             null,
@@ -163,46 +225,81 @@ export class HierarchyFilterService {
         );
     }
 
-    private createSingleSelectionTree(
-        selectedPath: HierarchyNode[]
+    private createSelectionTree(
+        selectedEndpoints: HierarchyNode[]
     ): IHierarchyIdentityFilterNode<
         CustomVisualOpaqueIdentity
     >[] {
-        let children:
+        const rootFilterNodes:
             IHierarchyIdentityFilterNode<
                 CustomVisualOpaqueIdentity
             >[] = [];
 
-        for (
-            let pathIndex =
-                selectedPath.length - 1;
-            pathIndex >= 0;
-            pathIndex--
-        ) {
-            const selectedNode =
-                selectedPath[pathIndex];
+        for (const endpoint of selectedEndpoints) {
+            const selectedPath =
+                this.getPathToNode(endpoint);
 
-            const filterNode:
-                IHierarchyIdentityFilterNode<
-                    CustomVisualOpaqueIdentity
-                > = {
-                    identity:
-                        selectedNode.identity,
-                    operator:
-                        pathIndex ===
-                        selectedPath.length - 1
-                            ? "Selected"
-                            : "Inherited"
-                };
+            let currentFilterNodes =
+                rootFilterNodes;
 
-            if (children.length > 0) {
-                filterNode.children = children;
+            for (
+                let pathIndex = 0;
+                pathIndex < selectedPath.length;
+                pathIndex++
+            ) {
+                const hierarchyNode =
+                    selectedPath[pathIndex];
+
+                const isLeaf =
+                    pathIndex ===
+                    selectedPath.length - 1;
+
+                let filterNode =
+                    currentFilterNodes.find(
+                        (candidate) =>
+                            this.compareIdentities(
+                                candidate.identity,
+                                hierarchyNode.identity
+                            )
+                    );
+
+                if (!filterNode) {
+                    filterNode = {
+                        identity:
+                            hierarchyNode.identity,
+                        operator:
+                            isLeaf
+                                ? "Selected"
+                                : "Inherited"
+                    };
+
+                    currentFilterNodes.push(
+                        filterNode
+                    );
+                }
+
+                if (isLeaf) {
+                    filterNode.operator =
+                        "Selected";
+                    delete filterNode.children;
+                    continue;
+                }
+
+                if (
+                    filterNode.operator !==
+                    "Selected"
+                ) {
+                    filterNode.operator =
+                        "Inherited";
+                }
+
+                filterNode.children ??= [];
+                currentFilterNodes =
+                    filterNode.children;
             }
-
-            children = [filterNode];
         }
 
-        return children;
+        return rootFilterNodes;
     }
 
     private readHierarchyData(
@@ -235,13 +332,14 @@ export class HierarchyFilterService {
         return null;
     }
 
-    private findDeepestSelectedNode(
+    private collectSelectedNodes(
         filterNodes:
             IHierarchyIdentityFilterNode<
                 CustomVisualOpaqueIdentity
             >[],
-        hierarchyNodes: HierarchyNode[]
-    ): HierarchyNode | null {
+        hierarchyNodes: HierarchyNode[],
+        selectedNodes: HierarchyNode[]
+    ): void {
         for (const filterNode of filterNodes) {
             const hierarchyNode =
                 hierarchyNodes.find(
@@ -256,27 +354,45 @@ export class HierarchyFilterService {
                 continue;
             }
 
-            const selectedDescendant =
-                filterNode.children
-                    ? this.findDeepestSelectedNode(
-                        filterNode.children,
-                        hierarchyNode.children
-                    )
-                    : null;
-
-            if (selectedDescendant) {
-                return selectedDescendant;
-            }
-
             if (
                 filterNode.operator ===
                 "Selected"
             ) {
-                return hierarchyNode;
+                selectedNodes.push(
+                    hierarchyNode
+                );
+                continue;
+            }
+
+            if (
+                filterNode.operator ===
+                    "Inherited" &&
+                filterNode.children
+            ) {
+                this.collectSelectedNodes(
+                    filterNode.children,
+                    hierarchyNode.children,
+                    selectedNodes
+                );
             }
         }
+    }
 
-        return null;
+    private getPathToNode(
+        node: HierarchyNode
+    ): HierarchyNode[] {
+        const path:
+            HierarchyNode[] = [];
+
+        let currentNode:
+            HierarchyNode | null = node;
+
+        while (currentNode) {
+            path.unshift(currentNode);
+            currentNode = currentNode.parent;
+        }
+
+        return path;
     }
 
     private tryReadLegacyTupleFilter(

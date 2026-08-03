@@ -14,6 +14,7 @@ The fields do not need to be configured as a formal Power BI hierarchy.
 ## Current features
 
 - Multiple related fields displayed in one selector
+- Single and multiple selection modes
 - Space-efficient column layout for dashboard headers
 - Context-aware values across fields
 - Search automatically shown for fields with enough values
@@ -32,6 +33,5 @@ The fields do not need to be configured as a formal Power BI hierarchy.
 
 ## Planned features
 
-- Multi-select
 - Further accessibility testing
 - Microsoft certification

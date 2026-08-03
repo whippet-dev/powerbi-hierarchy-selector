@@ -17,6 +17,26 @@
                 }
             }
         },
+        "selection": {
+            "displayName": "Selection",
+            "properties": {
+                "mode": {
+                    "displayName": "Selection mode",
+                    "type": {
+                        "enumeration": [
+                            {
+                                "value": "Single",
+                                "displayName": "Single"
+                            },
+                            {
+                                "value": "Multiple",
+                                "displayName": "Multiple"
+                            }
+                        ]
+                    }
+                }
+            }
+        },
         "values": {
             "displayName": "Values",
             "properties": {

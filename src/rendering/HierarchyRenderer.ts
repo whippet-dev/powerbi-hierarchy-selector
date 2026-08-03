@@ -28,7 +28,8 @@ export class HierarchyRenderer {
         onLevelClear: (levelIndex: number) => void,
         showSearchBoxes: boolean,
         minimumValuesForSearch: number,
-        showClearAll: boolean
+        showClearAll: boolean,
+        multipleSelectionEnabled: boolean
     ): void {
         this.pruneSearchTerms(
             hierarchyLevels.length
@@ -40,13 +41,8 @@ export class HierarchyRenderer {
 
         this.container.replaceChildren();
 
-        const selectedPath =
-            selection.getSelectedPath(
-                hierarchyLevels
-            );
-
         const hasSelection =
-            selectedPath.length > 0;
+            selection.hasSelection();
 
         const levelsContainer =
             document.createElement("div");
@@ -99,17 +95,20 @@ export class HierarchyRenderer {
 
             header.appendChild(heading);
 
-            const selectedKey =
-                selection.getSelectedKey(
-                    levelIndex
+            const selectedNodes =
+                selection.getSelectedNodesAtLevel(
+                    levelIndex,
+                    hierarchyLevels
                 );
 
-            if (selectedKey !== undefined) {
+            if (selectedNodes.length > 0) {
                 const clearLevelButton =
                     document.createElement("button");
 
                 const accessibleLabel =
-                    `Clear ${hierarchyLevel.name} selection`;
+                    selectedNodes.length === 1
+                        ? `Clear ${hierarchyLevel.name} selection`
+                        : `Clear ${hierarchyLevel.name} selections`;
 
                 clearLevelButton.className =
                     "hierarchy-level__clear";
@@ -194,30 +193,34 @@ export class HierarchyRenderer {
                     emptyMessage
                 );
             } else {
-                const selectedNode =
-                    selectedKey === undefined
-                        ? undefined
-                        : hierarchyLevel.nodes.find(
-                            (node) =>
-                                node.key ===
-                                selectedKey
-                        );
+                const selectedNodeKeys =
+                    new Set<string>(
+                        selectedNodes.map(
+                            (node) => node.key
+                        )
+                    );
 
-                if (selectedNode) {
+                if (selectedNodes.length > 0) {
                     const selectedContainer =
                         document.createElement("div");
 
                     selectedContainer.className =
                         "hierarchy-level__selected";
 
-                    selectedContainer.appendChild(
-                        this.createValueButton(
-                            selectedNode,
-                            selection,
-                            onNodeSelection,
-                            false
-                        )
-                    );
+                    for (
+                        const selectedNode of
+                        selectedNodes
+                    ) {
+                        selectedContainer.appendChild(
+                            this.createValueButton(
+                                selectedNode,
+                                selection,
+                                onNodeSelection,
+                                false,
+                                multipleSelectionEnabled
+                            )
+                        );
+                    }
 
                     valuesContainer.appendChild(
                         selectedContainer
@@ -239,9 +242,10 @@ export class HierarchyRenderer {
                         this.renderSearchResults(
                             scrollContainer,
                             hierarchyLevel,
-                            selectedNode,
+                            selectedNodeKeys,
                             selection,
                             onNodeSelection,
+                            multipleSelectionEnabled,
                             shouldShowSearch
                                 ? this.searchTerms.get(
                                     levelIndex
@@ -409,9 +413,10 @@ export class HierarchyRenderer {
     private renderSearchResults(
         scrollContainer: HTMLDivElement,
         hierarchyLevel: HierarchyViewLevel,
-        selectedNode: HierarchyNode | undefined,
+        selectedNodeKeys: ReadonlySet<string>,
         selection: HierarchySelection,
         onNodeSelection: (node: HierarchyNode) => void,
+        multipleSelectionEnabled: boolean,
         searchTerm: string
     ): void {
         scrollContainer.replaceChildren();
@@ -424,7 +429,7 @@ export class HierarchyRenderer {
         const scrollableNodes =
             hierarchyLevel.nodes.filter(
                 (node) =>
-                    node.key !== selectedNode?.key
+                    !selectedNodeKeys.has(node.key)
             );
 
         const matchingNodes =
@@ -490,7 +495,8 @@ export class HierarchyRenderer {
                     node,
                     selection,
                     onNodeSelection,
-                    isAlternative
+                    isAlternative,
+                    multipleSelectionEnabled
                 )
             );
         }
@@ -516,7 +522,8 @@ export class HierarchyRenderer {
         node: HierarchyNode,
         selection: HierarchySelection,
         onNodeSelection: (node: HierarchyNode) => void,
-        isAlternative: boolean
+        isAlternative: boolean,
+        multipleSelectionEnabled: boolean
     ): HTMLButtonElement {
         const button =
             document.createElement("button");
@@ -537,24 +544,22 @@ export class HierarchyRenderer {
             button.classList.add(
                 "hierarchy-level__value--alternative"
             );
-
-            button.title =
-                `Switch selection path to ${node.value}`;
-
-            button.setAttribute(
-                "aria-label",
-                `Switch selection path to ${node.value}`
-            );
-        } else {
-            button.title = node.value;
-
-            button.setAttribute(
-                "aria-label",
-                isSelected
-                    ? `Deselect ${node.value}`
-                    : `Select ${node.value}`
-            );
         }
+
+        button.title = node.value;
+
+        const accessibleLabel =
+            isSelected
+                ? `Deselect ${node.value}`
+                : isAlternative &&
+                    !multipleSelectionEnabled
+                    ? `Switch selection path to ${node.value}`
+                    : `Select ${node.value}`;
+
+        button.setAttribute(
+            "aria-label",
+            accessibleLabel
+        );
 
         button.setAttribute(
             "aria-pressed",

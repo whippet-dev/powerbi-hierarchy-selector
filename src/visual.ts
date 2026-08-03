@@ -52,8 +52,8 @@ export class Visual implements IVisual {
 
     private hierarchyLevels: HierarchyLevel[] = [];
 
-    private pendingFilterIdentity:
-        CustomVisualOpaqueIdentity |
+    private pendingFilterIdentities:
+        CustomVisualOpaqueIdentity[] |
         null |
         undefined;
 
@@ -109,7 +109,7 @@ export class Visual implements IVisual {
             ) !== 0;
 
         const isSelfInitiatedFilterUpdate =
-            this.pendingFilterIdentity !==
+            this.pendingFilterIdentities !==
             undefined;
 
         if (
@@ -128,7 +128,7 @@ export class Visual implements IVisual {
             !matrix.rows.root.children?.length
         ) {
             this.hierarchyLevels = [];
-            this.pendingFilterIdentity = undefined;
+            this.pendingFilterIdentities = undefined;
             this.selection.clear();
 
             this.renderer.renderLandingPage();
@@ -148,44 +148,49 @@ export class Visual implements IVisual {
             rootNodes.length === 0 ||
             this.hierarchyLevels.length === 0
         ) {
-            this.pendingFilterIdentity = undefined;
+            this.pendingFilterIdentities = undefined;
             this.selection.clear();
 
             this.renderer.renderLandingPage();
             return;
         }
 
-        const restoredNode =
-            this.filterService.readSelectedNode(
+        const restoredNodes =
+            this.filterService.readSelectedNodes(
                 options.jsonFilters,
                 rootNodes
             );
 
         if (
-            this.pendingFilterIdentity !== undefined
+            this.pendingFilterIdentities !== undefined
         ) {
-            const restoredIdentity =
-                restoredNode?.identity ?? null;
+            const restoredIdentities =
+                restoredNodes.map(
+                    (node) => node.identity
+                );
 
             if (
-                this.filterService.identitiesEqual(
-                    restoredIdentity,
-                    this.pendingFilterIdentity
-                )
+                this.filterService
+                    .identityCollectionsEqual(
+                        restoredIdentities,
+                        this.pendingFilterIdentities
+                    )
             ) {
-                this.pendingFilterIdentity = undefined;
+                this.pendingFilterIdentities = undefined;
 
-                this.selection.synchronizeFromNode(
-                    restoredNode
+                this.selection.synchronizeFromNodes(
+                    restoredNodes,
+                    this.hierarchyLevels
                 );
             } else {
                 this.selection.removeInvalidSelections(
                     this.hierarchyLevels
                 );
             }
-        } else if (restoredNode) {
-            this.selection.synchronizeFromNode(
-                restoredNode
+        } else if (restoredNodes.length > 0) {
+            this.selection.synchronizeFromNodes(
+                restoredNodes,
+                this.hierarchyLevels
             );
         } else {
             const legacyFilterValues =
@@ -198,6 +203,18 @@ export class Visual implements IVisual {
                 this.hierarchyLevels,
                 legacyFilterValues
             );
+        }
+
+        const selectionWasCollapsed =
+            this.selection
+                .setMultipleSelectionEnabled(
+                    this.isMultipleSelectionEnabled(),
+                    this.hierarchyLevels
+                );
+
+        if (selectionWasCollapsed) {
+            this.applyCurrentSelection();
+            return;
         }
 
         this.render();
@@ -216,7 +233,8 @@ export class Visual implements IVisual {
     ): void {
         this.selection.toggle(
             selectedNode,
-            this.hierarchyLevels.length
+            this.hierarchyLevels,
+            this.isMultipleSelectionEnabled()
         );
 
         this.applyCurrentSelection();
@@ -232,30 +250,29 @@ export class Visual implements IVisual {
     ): void {
         this.selection.clearFromLevel(
             levelIndex,
-            this.hierarchyLevels.length
+            this.hierarchyLevels
         );
 
         this.applyCurrentSelection();
     }
 
     private applyCurrentSelection(): void {
-        const selectedPath =
-            this.selection.getSelectedPath(
+        const selectedEndpoints =
+            this.selection.getSelectedEndpoints(
                 this.hierarchyLevels
             );
 
-        const deepestSelectedNode =
-            selectedPath[
-                selectedPath.length - 1
-            ];
-
-        this.pendingFilterIdentity =
-            deepestSelectedNode?.identity ?? null;
+        this.pendingFilterIdentities =
+            selectedEndpoints.length > 0
+                ? selectedEndpoints.map(
+                    (node) => node.identity
+                )
+                : null;
 
         this.render();
 
         this.filterService.apply(
-            selectedPath
+            selectedEndpoints
         );
     }
 
@@ -561,7 +578,18 @@ export class Visual implements IVisual {
             this.formattingSettings
                 .layoutCard
                 .showClearAll
-                .value
+                .value,
+            this.isMultipleSelectionEnabled()
+        );
+    }
+
+    private isMultipleSelectionEnabled():
+        boolean {
+        return (
+            this.formattingSettings
+                .selectionCard
+                .mode
+                .value === "Multiple"
         );
     }
 

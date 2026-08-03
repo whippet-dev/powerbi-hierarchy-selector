@@ -63,90 +63,85 @@ export class HierarchyView {
             return [];
         }
 
-        const selectedKey =
-            selection.getSelectedKey(targetLevel);
-
-        /*
-         * Once this level has a selection, that selected node is the
-         * active value. Every other value remains available as an
-         * alternative branch.
-         */
-        if (selectedKey !== undefined) {
-            const selectedNode =
-                hierarchyLevel.nodes.find(
-                    (node) =>
-                        node.key === selectedKey
-                );
-
-            return selectedNode
-                ? [selectedNode]
-                : [];
-        }
-
-        /*
-         * With no selected ancestor, every value at this level is
-         * compatible and retains its existing alphabetical order.
-         */
-        const selectedAncestor =
-            this.getDeepestSelectedAncestor(
-                hierarchyLevels,
-                selection,
-                targetLevel
+        const selectedEndpoints =
+            selection.getSelectedEndpoints(
+                hierarchyLevels
             );
 
-        if (!selectedAncestor) {
+        if (selectedEndpoints.length === 0) {
             return hierarchyLevel.nodes;
         }
 
-        /*
-         * For an unselected descendant level, values belonging to the
-         * deepest selected branch are compatible. All remaining values
-         * are still rendered afterwards as alternative branches.
-         */
-        return this.getDescendantsAtLevel(
-            selectedAncestor,
-            targetLevel
-        );
-    }
+        const compatibleNodeKeys =
+            new Set<string>();
 
-    private getDeepestSelectedAncestor(
-        hierarchyLevels: HierarchyLevel[],
-        selection: HierarchySelection,
-        targetLevel: number
-    ): HierarchyNode | null {
-        for (
-            let levelIndex = targetLevel - 1;
-            levelIndex >= 0;
-            levelIndex--
-        ) {
-            const selectedKey =
-                selection.getSelectedKey(levelIndex);
+        for (const endpoint of selectedEndpoints) {
+            if (endpoint.level >= targetLevel) {
+                const pathNode =
+                    this.getAncestorAtLevel(
+                        endpoint,
+                        targetLevel
+                    );
 
-            if (!selectedKey) {
+                if (pathNode) {
+                    compatibleNodeKeys.add(
+                        pathNode.key
+                    );
+                }
+
                 continue;
             }
 
-            const selectedNode =
-                hierarchyLevels[levelIndex]?.nodes.find(
-                    (node) =>
-                        node.key === selectedKey
+            for (
+                const descendant of
+                this.getDescendantsAtLevel(
+                    endpoint,
+                    targetLevel
+                )
+            ) {
+                compatibleNodeKeys.add(
+                    descendant.key
                 );
-
-            if (selectedNode) {
-                return selectedNode;
             }
         }
 
-        return null;
+        return hierarchyLevel.nodes.filter(
+            (node) =>
+                compatibleNodeKeys.has(node.key)
+        );
+    }
+
+    private getAncestorAtLevel(
+        node: HierarchyNode,
+        targetLevel: number
+    ): HierarchyNode | null {
+        let currentNode:
+            HierarchyNode | null = node;
+
+        while (
+            currentNode &&
+            currentNode.level > targetLevel
+        ) {
+            currentNode = currentNode.parent;
+        }
+
+        return (
+            currentNode?.level === targetLevel
+                ? currentNode
+                : null
+        );
     }
 
     private getDescendantsAtLevel(
         ancestor: HierarchyNode,
         targetLevel: number
     ): HierarchyNode[] {
-        const matchingNodes: HierarchyNode[] = [];
+        const matchingNodes:
+            HierarchyNode[] = [];
 
-        const visit = (node: HierarchyNode): void => {
+        const visit = (
+            node: HierarchyNode
+        ): void => {
             if (node.level === targetLevel) {
                 matchingNodes.push(node);
                 return;
@@ -165,11 +160,6 @@ export class HierarchyView {
             visit(child);
         }
 
-        return matchingNodes.sort(
-            (first, second) =>
-                first.value.localeCompare(
-                    second.value
-                )
-        );
+        return matchingNodes;
     }
 }

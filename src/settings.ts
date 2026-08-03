@@ -14,6 +14,24 @@ import FormattingSettingsSlice =
 import FormattingSettingsModel =
     formattingSettings.Model;
 
+class SelectionCardSettings extends FormattingSettingsCard {
+    public mode =
+        new formattingSettings.AutoDropdown({
+            name: "mode",
+            displayName: "Selection mode",
+            description:
+                "Choose whether the visual allows one selected branch or multiple selected branches.",
+            value: "Single"
+        });
+
+    public name: string = "selection";
+    public displayName: string = "Selection";
+
+    public slices: FormattingSettingsSlice[] = [
+        this.mode
+    ];
+}
+
 class ValuesCardSettings extends FormattingSettingsCard {
     public fontFamily =
         new formattingSettings.FontPicker({
@@ -576,6 +594,9 @@ class LayoutCardSettings extends FormattingSettingsCard {
 
 export class VisualFormattingSettingsModel
     extends FormattingSettingsModel {
+    public selectionCard =
+        new SelectionCardSettings();
+
     public valuesCard =
         new ValuesCardSettings();
 
@@ -595,6 +616,7 @@ export class VisualFormattingSettingsModel
         new LayoutCardSettings();
 
     public cards = [
+        this.selectionCard,
         this.valuesCard,
         this.coloursCard,
         this.headingsCard,
