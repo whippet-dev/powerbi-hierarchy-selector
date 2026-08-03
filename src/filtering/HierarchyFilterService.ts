@@ -3,18 +3,15 @@
 import powerbi from "powerbi-visuals-api";
 import {
     FilterType,
-    IFilterColumnTarget,
-    ITupleElementValue,
-    ITupleFilter,
-    ITupleFilterTarget,
-    PrimitiveValueType,
-    TupleValueType
+    HierarchyIdentityFilter,
+    IHierarchyIdentityFilterNode,
+    PrimitiveValueType
 } from "powerbi-models";
 
 import { HierarchyNode } from "../models/hierarchy";
 
-import DataViewCategoryColumn =
-    powerbi.DataViewCategoryColumn;
+import CustomVisualOpaqueIdentity =
+    powerbi.visuals.CustomVisualOpaqueIdentity;
 
 import FilterAction =
     powerbi.FilterAction;
@@ -23,15 +20,35 @@ import IVisualHost =
     powerbi.extensibility.visual.IVisualHost;
 
 export class HierarchyFilterService {
-    private static readonly objectName = "general";
-    private static readonly propertyName = "filter";
+    private static readonly objectName =
+        "general";
+
+    private static readonly propertyName =
+        "filter";
+
+    private readonly compareIdentities: (
+        first: CustomVisualOpaqueIdentity,
+        second: CustomVisualOpaqueIdentity
+    ) => boolean;
 
     public constructor(
         private readonly host: IVisualHost
-    ) {}
+    ) {
+        const opaqueUtils =
+            this.host.createOpaqueUtils();
+
+        this.compareIdentities = (
+            first,
+            second
+        ) =>
+            opaqueUtils
+                .compareCustomVisualOpaqueIdentities(
+                    first,
+                    second
+                );
+    }
 
     public apply(
-        categories: DataViewCategoryColumn[],
         selectedPath: HierarchyNode[]
     ): void {
         if (selectedPath.length === 0) {
@@ -39,33 +56,18 @@ export class HierarchyFilterService {
             return;
         }
 
-        const selectedCategories =
-            categories.slice(0, selectedPath.length);
-
-        const target: ITupleFilterTarget =
-            selectedCategories.map(
-                (category) =>
-                    this.createTarget(category)
+        const hierarchyData =
+            this.createSingleSelectionTree(
+                selectedPath
             );
 
-        const selectedValues =
-            this.getSelectedValues(selectedPath);
-
-        const tuple: TupleValueType =
-            selectedValues.map(
-                (value): ITupleElementValue => ({
-                    value
-                })
-            );
-
-        const filter: ITupleFilter = {
-            $schema:
-                "https://powerbi.com/product/schema#tuple",
-            filterType: FilterType.Tuple,
-            operator: "In",
-            target,
-            values: [tuple]
-        };
+        const filter =
+            new HierarchyIdentityFilter<
+                CustomVisualOpaqueIdentity
+            >(
+                [],
+                hierarchyData
+            ).toJSON();
 
         this.host.applyJsonFilter(
             filter,
@@ -75,36 +77,81 @@ export class HierarchyFilterService {
         );
     }
 
-    public getSelectedValues(
-        selectedPath: HierarchyNode[]
-    ): PrimitiveValueType[] {
-        return selectedPath.map(
-            (node) =>
-                this.toTuplePrimitive(node.rawValue)
+    public readSelectedNode(
+        filters: powerbi.IFilter[] | undefined,
+        rootNodes: HierarchyNode[]
+    ): HierarchyNode | null {
+        const hierarchyData =
+            this.readHierarchyData(filters);
+
+        if (hierarchyData === null) {
+            return null;
+        }
+
+        return this.findDeepestSelectedNode(
+            hierarchyData,
+            rootNodes
         );
     }
 
-    public readSelectedValues(
-        filters: powerbi.IFilter[] | undefined,
-        categories: DataViewCategoryColumn[]
+    public readLegacySelectedValues(
+        filters: powerbi.IFilter[] | undefined
     ): PrimitiveValueType[] | null {
         if (!filters || filters.length === 0) {
             return null;
         }
 
         for (const filter of filters) {
-            const selectedValues =
-                this.tryReadSelectedValues(
-                    filter,
-                    categories
-                );
+            if (!this.isRecord(filter)) {
+                continue;
+            }
 
-            if (selectedValues !== null) {
-                return selectedValues;
+            if (
+                filter.filterType ===
+                FilterType.Tuple
+            ) {
+                const tupleValues =
+                    this.tryReadLegacyTupleFilter(
+                        filter
+                    );
+
+                if (tupleValues !== null) {
+                    return tupleValues;
+                }
+            }
+
+            if (
+                filter.filterType ===
+                FilterType.Basic
+            ) {
+                const basicValues =
+                    this.tryReadLegacyBasicFilter(
+                        filter
+                    );
+
+                if (basicValues !== null) {
+                    return basicValues;
+                }
             }
         }
 
         return null;
+    }
+
+    public identitiesEqual(
+        first:
+            CustomVisualOpaqueIdentity | null,
+        second:
+            CustomVisualOpaqueIdentity | null
+    ): boolean {
+        if (first === null || second === null) {
+            return first === second;
+        }
+
+        return this.compareIdentities(
+            first,
+            second
+        );
     }
 
     public clear(): void {
@@ -116,48 +163,128 @@ export class HierarchyFilterService {
         );
     }
 
-    private tryReadSelectedValues(
-        value: unknown,
-        categories: DataViewCategoryColumn[]
-    ): PrimitiveValueType[] | null {
-        if (!this.isRecord(value)) {
+    private createSingleSelectionTree(
+        selectedPath: HierarchyNode[]
+    ): IHierarchyIdentityFilterNode<
+        CustomVisualOpaqueIdentity
+    >[] {
+        let children:
+            IHierarchyIdentityFilterNode<
+                CustomVisualOpaqueIdentity
+            >[] = [];
+
+        for (
+            let pathIndex =
+                selectedPath.length - 1;
+            pathIndex >= 0;
+            pathIndex--
+        ) {
+            const selectedNode =
+                selectedPath[pathIndex];
+
+            const filterNode:
+                IHierarchyIdentityFilterNode<
+                    CustomVisualOpaqueIdentity
+                > = {
+                    identity:
+                        selectedNode.identity,
+                    operator:
+                        pathIndex ===
+                        selectedPath.length - 1
+                            ? "Selected"
+                            : "Inherited"
+                };
+
+            if (children.length > 0) {
+                filterNode.children = children;
+            }
+
+            children = [filterNode];
+        }
+
+        return children;
+    }
+
+    private readHierarchyData(
+        filters: powerbi.IFilter[] | undefined
+    ): IHierarchyIdentityFilterNode<
+        CustomVisualOpaqueIdentity
+    >[] | null {
+        if (!filters || filters.length === 0) {
             return null;
         }
 
-        if (value.filterType === FilterType.Tuple) {
-            return this.tryReadTupleFilter(
-                value,
-                categories
-            );
-        }
+        for (const filter of filters) {
+            if (
+                !this.isRecord(filter) ||
+                filter.filterType !==
+                    FilterType.HierarchyIdentity ||
+                !Array.isArray(
+                    filter.hierarchyData
+                )
+            ) {
+                continue;
+            }
 
-        if (value.filterType === FilterType.Basic) {
-            return this.tryReadBasicFilter(
-                value,
-                categories
-            );
+            return filter.hierarchyData as
+                IHierarchyIdentityFilterNode<
+                    CustomVisualOpaqueIdentity
+                >[];
         }
 
         return null;
     }
 
-    private tryReadTupleFilter(
-        value: Record<string, unknown>,
-        categories: DataViewCategoryColumn[]
+    private findDeepestSelectedNode(
+        filterNodes:
+            IHierarchyIdentityFilterNode<
+                CustomVisualOpaqueIdentity
+            >[],
+        hierarchyNodes: HierarchyNode[]
+    ): HierarchyNode | null {
+        for (const filterNode of filterNodes) {
+            const hierarchyNode =
+                hierarchyNodes.find(
+                    (node) =>
+                        this.compareIdentities(
+                            node.identity,
+                            filterNode.identity
+                        )
+                );
+
+            if (!hierarchyNode) {
+                continue;
+            }
+
+            const selectedDescendant =
+                filterNode.children
+                    ? this.findDeepestSelectedNode(
+                        filterNode.children,
+                        hierarchyNode.children
+                    )
+                    : null;
+
+            if (selectedDescendant) {
+                return selectedDescendant;
+            }
+
+            if (
+                filterNode.operator ===
+                "Selected"
+            ) {
+                return hierarchyNode;
+            }
+        }
+
+        return null;
+    }
+
+    private tryReadLegacyTupleFilter(
+        value: Record<string, unknown>
     ): PrimitiveValueType[] | null {
         if (
             value.operator !== "In" ||
-            !Array.isArray(value.target) ||
             !Array.isArray(value.values)
-        ) {
-            return null;
-        }
-
-        if (
-            !this.targetMatchesCategories(
-                value.target,
-                categories
-            )
         ) {
             return null;
         }
@@ -191,111 +318,25 @@ export class HierarchyFilterService {
             : null;
     }
 
-    private tryReadBasicFilter(
-        value: Record<string, unknown>,
-        categories: DataViewCategoryColumn[]
+    private tryReadLegacyBasicFilter(
+        value: Record<string, unknown>
     ): PrimitiveValueType[] | null {
-        const firstCategory = categories[0];
-
         if (
-            !firstCategory ||
             value.operator !== "In" ||
-            !this.isRecord(value.target) ||
             !Array.isArray(value.values) ||
             value.values.length !== 1
         ) {
             return null;
         }
 
-        if (
-            !this.targetMatchesCategory(
-                value.target,
-                firstCategory
-            )
-        ) {
-            return null;
-        }
+        const selectedValue =
+            value.values[0];
 
-        const selectedValue = value.values[0];
-
-        if (!this.isTuplePrimitive(selectedValue)) {
-            return null;
-        }
-
-        return [selectedValue];
-    }
-
-    private targetMatchesCategories(
-        target: unknown[],
-        categories: DataViewCategoryColumn[]
-    ): boolean {
-        if (
-            target.length === 0 ||
-            target.length > categories.length
-        ) {
-            return false;
-        }
-
-        return target.every(
-            (targetItem, index) => {
-                const category = categories[index];
-
-                return (
-                    category !== undefined &&
-                    this.isRecord(targetItem) &&
-                    this.targetMatchesCategory(
-                        targetItem,
-                        category
-                    )
-                );
-            }
-        );
-    }
-
-    private targetMatchesCategory(
-        target: Record<string, unknown>,
-        category: DataViewCategoryColumn
-    ): boolean {
-        const expectedTarget =
-            this.createTarget(category);
-
-        return (
-            target.table === expectedTarget.table &&
-            target.column === expectedTarget.column
-        );
-    }
-
-    private createTarget(
-        category: DataViewCategoryColumn
-    ): IFilterColumnTarget {
-        const queryName = category.source.queryName;
-
-        const separatorIndex =
-            queryName?.indexOf(".") ?? -1;
-
-        if (
-            !queryName ||
-            separatorIndex <= 0 ||
-            separatorIndex ===
-                queryName.length - 1
-        ) {
-            throw new Error(
-                `Unable to create a filter target for ` +
-                `"${category.source.displayName}".`
-            );
-        }
-
-        return {
-            table:
-                queryName.substring(
-                    0,
-                    separatorIndex
-                ),
-            column:
-                queryName.substring(
-                    separatorIndex + 1
-                )
-        };
+        return this.isTuplePrimitive(
+            selectedValue
+        )
+            ? [selectedValue]
+            : null;
     }
 
     private isRecord(
@@ -314,22 +355,6 @@ export class HierarchyFilterService {
             typeof value === "string" ||
             typeof value === "number" ||
             typeof value === "boolean"
-        );
-    }
-
-    private toTuplePrimitive(
-        value: powerbi.PrimitiveValue
-    ): PrimitiveValueType {
-        if (value instanceof Date) {
-            return value.toISOString();
-        }
-
-        if (this.isTuplePrimitive(value)) {
-            return value;
-        }
-
-        throw new Error(
-            "The selected hierarchy value cannot be used in a tuple filter."
         );
     }
 }

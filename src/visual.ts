@@ -2,9 +2,6 @@
 
 import powerbi from "powerbi-visuals-api";
 import {
-    PrimitiveValueType
-} from "powerbi-models";
-import {
     FormattingSettingsService
 } from "powerbi-visuals-utils-formattingmodel";
 import "../style/visual.less";
@@ -28,11 +25,17 @@ import VisualConstructorOptions =
 import VisualUpdateOptions =
     powerbi.extensibility.visual.VisualUpdateOptions;
 
+import VisualUpdateType =
+    powerbi.VisualUpdateType;
+
 import IVisual =
     powerbi.extensibility.visual.IVisual;
 
-import DataViewCategoryColumn =
-    powerbi.DataViewCategoryColumn;
+import DataViewMatrix =
+    powerbi.DataViewMatrix;
+
+import CustomVisualOpaqueIdentity =
+    powerbi.visuals.CustomVisualOpaqueIdentity;
 
 export class Visual implements IVisual {
     private readonly container: HTMLDivElement;
@@ -48,10 +51,11 @@ export class Visual implements IVisual {
         VisualFormattingSettingsModel;
 
     private hierarchyLevels: HierarchyLevel[] = [];
-    private categories: DataViewCategoryColumn[] = [];
 
-    private pendingFilterValues:
-        PrimitiveValueType[] | null | undefined;
+    private pendingFilterIdentity:
+        CustomVisualOpaqueIdentity |
+        null |
+        undefined;
 
     public constructor(options: VisualConstructorOptions) {
         this.container = document.createElement("div");
@@ -98,12 +102,33 @@ export class Visual implements IVisual {
 
         this.applyFormattingSettings();
 
-        this.categories =
-            dataView?.categorical?.categories ?? [];
+        const isDataUpdate =
+            (
+                options.type &
+                VisualUpdateType.Data
+            ) !== 0;
 
-        if (this.categories.length === 0) {
+        const isSelfInitiatedFilterUpdate =
+            this.pendingFilterIdentity !==
+            undefined;
+
+        if (
+            isDataUpdate &&
+            !isSelfInitiatedFilterUpdate
+        ) {
+            this.renderer.clearSearchTerms();
+        }
+
+        const matrix: DataViewMatrix | undefined =
+            dataView?.matrix;
+
+        if (
+            !matrix ||
+            matrix.rows.levels.length === 0 ||
+            !matrix.rows.root.children?.length
+        ) {
             this.hierarchyLevels = [];
-            this.pendingFilterValues = undefined;
+            this.pendingFilterIdentity = undefined;
             this.selection.clear();
 
             this.renderer.renderLandingPage();
@@ -111,42 +136,67 @@ export class Visual implements IVisual {
         }
 
         const rootNodes =
-            this.hierarchyTree.build(this.categories);
+            this.hierarchyTree.build(matrix);
 
         this.hierarchyLevels =
             this.hierarchyTree.getLevels(
-                this.categories,
+                matrix,
                 rootNodes
             );
 
-        const filterValues =
-            this.filterService.readSelectedValues(
+        if (
+            rootNodes.length === 0 ||
+            this.hierarchyLevels.length === 0
+        ) {
+            this.pendingFilterIdentity = undefined;
+            this.selection.clear();
+
+            this.renderer.renderLandingPage();
+            return;
+        }
+
+        const restoredNode =
+            this.filterService.readSelectedNode(
                 options.jsonFilters,
-                this.categories
+                rootNodes
             );
 
-        if (this.pendingFilterValues !== undefined) {
+        if (
+            this.pendingFilterIdentity !== undefined
+        ) {
+            const restoredIdentity =
+                restoredNode?.identity ?? null;
+
             if (
-                this.areFilterValuesEqual(
-                    filterValues,
-                    this.pendingFilterValues
+                this.filterService.identitiesEqual(
+                    restoredIdentity,
+                    this.pendingFilterIdentity
                 )
             ) {
-                this.pendingFilterValues = undefined;
+                this.pendingFilterIdentity = undefined;
 
-                this.selection.synchronizeFromValues(
-                    this.hierarchyLevels,
-                    filterValues
+                this.selection.synchronizeFromNode(
+                    restoredNode
                 );
             } else {
                 this.selection.removeInvalidSelections(
                     this.hierarchyLevels
                 );
             }
+        } else if (restoredNode) {
+            this.selection.synchronizeFromNode(
+                restoredNode
+            );
         } else {
+            const legacyFilterValues =
+                this.filterService
+                    .readLegacySelectedValues(
+                        options.jsonFilters
+                    );
+
             this.selection.synchronizeFromValues(
                 this.hierarchyLevels,
-                filterValues
+                legacyFilterValues
             );
         }
 
@@ -194,20 +244,17 @@ export class Visual implements IVisual {
                 this.hierarchyLevels
             );
 
-        const selectedValues =
-            this.filterService.getSelectedValues(
-                selectedPath
-            );
+        const deepestSelectedNode =
+            selectedPath[
+                selectedPath.length - 1
+            ];
 
-        this.pendingFilterValues =
-            selectedValues.length > 0
-                ? selectedValues
-                : null;
+        this.pendingFilterIdentity =
+            deepestSelectedNode?.identity ?? null;
 
         this.render();
 
         this.filterService.apply(
-            this.categories,
             selectedPath
         );
     }
@@ -515,30 +562,6 @@ export class Visual implements IVisual {
                 .layoutCard
                 .showClearAll
                 .value
-        );
-    }
-
-    private areFilterValuesEqual(
-        firstValues: PrimitiveValueType[] | null,
-        secondValues: PrimitiveValueType[] | null
-    ): boolean {
-        if (
-            firstValues === null ||
-            secondValues === null
-        ) {
-            return firstValues === secondValues;
-        }
-
-        if (
-            firstValues.length !==
-            secondValues.length
-        ) {
-            return false;
-        }
-
-        return firstValues.every(
-            (value, index) =>
-                value === secondValues[index]
         );
     }
 

@@ -5,10 +5,14 @@ import powerbi from "powerbi-visuals-api";
 import PrimitiveValue =
     powerbi.PrimitiveValue;
 
+import CustomVisualOpaqueIdentity =
+    powerbi.visuals.CustomVisualOpaqueIdentity;
+
 export interface HierarchyNode {
     key: string;
     value: string;
     rawValue: PrimitiveValue;
+    identity: CustomVisualOpaqueIdentity;
     level: number;
     parent: HierarchyNode | null;
     children: HierarchyNode[];

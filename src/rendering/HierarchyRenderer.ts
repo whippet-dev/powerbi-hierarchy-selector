@@ -16,6 +16,10 @@ export class HierarchyRenderer {
         private readonly container: HTMLDivElement
     ) {}
 
+    public clearSearchTerms(): void {
+        this.searchTerms.clear();
+    }
+
     public render(
         hierarchyLevels: HierarchyViewLevel[],
         selection: HierarchySelection,

@@ -6,94 +6,44 @@ import {
     HierarchyNode
 } from "../models/hierarchy";
 
-import DataViewCategoryColumn =
-    powerbi.DataViewCategoryColumn;
+import DataViewMatrix =
+    powerbi.DataViewMatrix;
+
+import DataViewMatrixNode =
+    powerbi.DataViewMatrixNode;
 
 import PrimitiveValue =
     powerbi.PrimitiveValue;
 
 export class HierarchyTree {
     public build(
-        categories: DataViewCategoryColumn[]
+        matrix: DataViewMatrix
     ): HierarchyNode[] {
-        const rootNodes: HierarchyNode[] = [];
-
-        const rowCount = Math.max(
-            ...categories.map(
-                (category) => category.values.length
-            ),
-            0
+        return this.buildNodes(
+            matrix.rows.root.children ?? [],
+            null,
+            []
         );
-
-        for (
-            let rowIndex = 0;
-            rowIndex < rowCount;
-            rowIndex++
-        ) {
-            let currentLevelNodes = rootNodes;
-            let parentNode: HierarchyNode | null = null;
-
-            const pathParts: string[] = [];
-
-            for (
-                let levelIndex = 0;
-                levelIndex < categories.length;
-                levelIndex++
-            ) {
-                const category = categories[levelIndex];
-                const rawValue = category.values[rowIndex];
-
-                const value =
-                    this.formatHierarchyValue(rawValue);
-
-                if (value === null) {
-                    break;
-                }
-
-                pathParts.push(value);
-
-                const key = pathParts.join("||");
-
-                let node = currentLevelNodes.find(
-                    (existingNode) =>
-                        existingNode.key === key
-                );
-
-                if (!node) {
-                    node = {
-                        key,
-                        value,
-                        rawValue,
-                        level: levelIndex,
-                        parent: parentNode,
-                        children: []
-                    };
-
-                    currentLevelNodes.push(node);
-                }
-
-                parentNode = node;
-                currentLevelNodes = node.children;
-            }
-        }
-
-        return rootNodes;
     }
 
     public getLevels(
-        categories: DataViewCategoryColumn[],
+        matrix: DataViewMatrix,
         rootNodes: HierarchyNode[]
     ): HierarchyLevel[] {
-        const levels: HierarchyLevel[] = categories.map(
-            (category, levelIndex) => ({
-                name:
-                    category.source.displayName ||
-                    `Level ${levelIndex + 1}`,
-                nodes: []
-            })
-        );
+        const levels: HierarchyLevel[] =
+            matrix.rows.levels.map(
+                (level, levelIndex) => ({
+                    name:
+                        level.sources?.[0]
+                            ?.displayName ||
+                        `Field ${levelIndex + 1}`,
+                    nodes: []
+                })
+            );
 
-        const visitNode = (node: HierarchyNode): void => {
+        const visitNode = (
+            node: HierarchyNode
+        ): void => {
             levels[node.level]?.nodes.push(node);
 
             for (const child of node.children) {
@@ -106,22 +56,107 @@ export class HierarchyTree {
         }
 
         for (const level of levels) {
-            level.nodes.sort((first, second) =>
-                first.value.localeCompare(second.value)
+            level.nodes.sort(
+                (first, second) =>
+                    first.value.localeCompare(
+                        second.value
+                    )
             );
         }
 
         return levels;
     }
 
+    private buildNodes(
+        matrixNodes: DataViewMatrixNode[],
+        parentNode: HierarchyNode | null,
+        parentPathParts: string[]
+    ): HierarchyNode[] {
+        const hierarchyNodes: HierarchyNode[] = [];
+        const siblingKeyCounts =
+            new Map<string, number>();
+
+        for (const matrixNode of matrixNodes) {
+            if (matrixNode.isSubtotal) {
+                continue;
+            }
+
+            const rawValue =
+                matrixNode.levelValues?.[0]
+                    ?.value ??
+                matrixNode.value;
+
+            const value =
+                this.formatHierarchyValue(rawValue);
+            const identity = matrixNode.identity;
+
+            if (
+                value === null ||
+                identity === undefined
+            ) {
+                continue;
+            }
+
+            const level =
+                matrixNode.level ??
+                (parentNode?.level ?? -1) + 1;
+
+            const pathParts = [
+                ...parentPathParts,
+                value
+            ];
+
+            const baseKey =
+                pathParts.join("||");
+
+            const occurrence =
+                (siblingKeyCounts.get(baseKey) ?? 0) +
+                1;
+
+            siblingKeyCounts.set(
+                baseKey,
+                occurrence
+            );
+
+            const key =
+                occurrence === 1
+                    ? baseKey
+                    : `${baseKey}||#${occurrence}`;
+
+            const node: HierarchyNode = {
+                key,
+                value,
+                rawValue,
+                identity,
+                level,
+                parent: parentNode,
+                children: []
+            };
+
+            node.children = this.buildNodes(
+                matrixNode.children ?? [],
+                node,
+                pathParts
+            );
+
+            hierarchyNodes.push(node);
+        }
+
+        return hierarchyNodes;
+    }
+
     private formatHierarchyValue(
         value: PrimitiveValue
     ): string | null {
-        if (value === null || value === undefined) {
+        if (
+            value === null ||
+            value === undefined
+        ) {
             return null;
         }
 
-        const formattedValue = String(value).trim();
+        const formattedValue =
+            String(value).trim();
 
         return formattedValue.length > 0
             ? formattedValue

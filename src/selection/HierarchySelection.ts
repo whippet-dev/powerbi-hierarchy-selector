@@ -10,8 +10,9 @@ import {
 } from "../models/hierarchy";
 
 export class HierarchySelection {
-    private readonly selectedNodeKeys: Map<number, string> =
-        new Map<number, string>();
+    private readonly selectedNodeKeys:
+        Map<number, string> =
+            new Map<number, string>();
 
     public clear(): void {
         this.selectedNodeKeys.clear();
@@ -26,7 +27,9 @@ export class HierarchySelection {
             levelIndex < levelCount;
             levelIndex++
         ) {
-            this.selectedNodeKeys.delete(levelIndex);
+            this.selectedNodeKeys.delete(
+                levelIndex
+            );
         }
     }
 
@@ -47,7 +50,9 @@ export class HierarchySelection {
             levelIndex++
         ) {
             const selectedKey =
-                this.selectedNodeKeys.get(levelIndex);
+                this.selectedNodeKeys.get(
+                    levelIndex
+                );
 
             if (!selectedKey) {
                 break;
@@ -69,10 +74,13 @@ export class HierarchySelection {
         return selectedPath;
     }
 
-    public isSelected(node: HierarchyNode): boolean {
+    public isSelected(
+        node: HierarchyNode
+    ): boolean {
         return (
-            this.selectedNodeKeys.get(node.level) ===
-            node.key
+            this.selectedNodeKeys.get(
+                node.level
+            ) === node.key
         );
     }
 
@@ -102,22 +110,29 @@ export class HierarchySelection {
             levelCount
         );
 
-        let currentNode: HierarchyNode | null =
-            selectedNode;
+        this.selectNodeAndAncestors(
+            selectedNode
+        );
+    }
 
-        while (currentNode !== null) {
-            this.selectedNodeKeys.set(
-                currentNode.level,
-                currentNode.key
-            );
+    public synchronizeFromNode(
+        selectedNode: HierarchyNode | null
+    ): void {
+        this.clear();
 
-            currentNode = currentNode.parent;
+        if (!selectedNode) {
+            return;
         }
+
+        this.selectNodeAndAncestors(
+            selectedNode
+        );
     }
 
     public synchronizeFromValues(
         levels: HierarchyLevel[],
-        selectedValues: PrimitiveValueType[] | null
+        selectedValues:
+            PrimitiveValueType[] | null
     ): void {
         this.clear();
 
@@ -176,11 +191,14 @@ export class HierarchySelection {
     public removeInvalidSelections(
         levels: HierarchyLevel[]
     ): void {
-        const availableNodeKeys = new Set<string>();
+        const availableNodeKeys =
+            new Set<string>();
 
         for (const level of levels) {
             for (const node of level.nodes) {
-                availableNodeKeys.add(node.key);
+                availableNodeKeys.add(
+                    node.key
+                );
             }
         }
 
@@ -200,7 +218,9 @@ export class HierarchySelection {
 
             if (
                 selectedKey === undefined ||
-                !availableNodeKeys.has(selectedKey)
+                !availableNodeKeys.has(
+                    selectedKey
+                )
             ) {
                 this.clearFromLevel(
                     levelIndex,
@@ -209,6 +229,23 @@ export class HierarchySelection {
 
                 break;
             }
+        }
+    }
+
+    private selectNodeAndAncestors(
+        selectedNode: HierarchyNode
+    ): void {
+        let currentNode:
+            HierarchyNode | null =
+                selectedNode;
+
+        while (currentNode !== null) {
+            this.selectedNodeKeys.set(
+                currentNode.level,
+                currentNode.key
+            );
+
+            currentNode = currentNode.parent;
         }
     }
 

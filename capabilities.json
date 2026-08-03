@@ -295,8 +295,8 @@
                     }
                 }
             ],
-            "categorical": {
-                "categories": {
+            "matrix": {
+                "rows": {
                     "for": {
                         "in": "hierarchy"
                     },
