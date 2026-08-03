@@ -24,11 +24,21 @@ class SelectionCardSettings extends FormattingSettingsCard {
             value: "Single"
         });
 
+    public showIncludedCounts =
+        new formattingSettings.ToggleSwitch({
+            name: "showIncludedCounts",
+            displayName: "Show included counts",
+            description:
+                "Show or hide the number of values included through higher-level selections.",
+            value: true
+        });
+
     public name: string = "selection";
     public displayName: string = "Selection";
 
     public slices: FormattingSettingsSlice[] = [
-        this.mode
+        this.mode,
+        this.showIncludedCounts
     ];
 }
 
@@ -546,7 +556,7 @@ class LayoutCardSettings extends FormattingSettingsCard {
             displayName: "Minimum values for search",
             description:
                 "Show search only when a field contains at least this many distinct values.",
-            value: 8,
+            value: 1,
             options: {
                 minValue: {
                     type:

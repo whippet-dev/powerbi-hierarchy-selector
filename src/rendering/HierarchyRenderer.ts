@@ -3,7 +3,10 @@
 import {
     HierarchyNode
 } from "../models/hierarchy";
-import { HierarchySelection } from "../selection/HierarchySelection";
+import {
+    HierarchySelection,
+    HierarchySelectionState
+} from "../selection/HierarchySelection";
 import type {
     HierarchyViewLevel
 } from "../view/HierarchyView";
@@ -29,7 +32,8 @@ export class HierarchyRenderer {
         showSearchBoxes: boolean,
         minimumValuesForSearch: number,
         showClearAll: boolean,
-        multipleSelectionEnabled: boolean
+        multipleSelectionEnabled: boolean,
+        showIncludedCounts: boolean
     ): void {
         this.pruneSearchTerms(
             hierarchyLevels.length
@@ -100,6 +104,46 @@ export class HierarchyRenderer {
                     levelIndex,
                     hierarchyLevels
                 );
+
+            const inheritedNodes =
+                multipleSelectionEnabled
+                    ? selection
+                        .getInheritedNodesAtLevel(
+                            levelIndex,
+                            hierarchyLevels
+                        )
+                    : [];
+
+            if (
+                showIncludedCounts &&
+                inheritedNodes.length > 0
+            ) {
+                const includedBadge =
+                    document.createElement("span");
+
+                includedBadge.className =
+                    "hierarchy-level__included-count";
+
+                includedBadge.textContent =
+                    `${inheritedNodes.length} included`;
+
+                const includedDescription =
+                    inheritedNodes.length === 1
+                        ? "1 value is included through a higher-level selection"
+                        : `${inheritedNodes.length} values are included through higher-level selections`;
+
+                includedBadge.title =
+                    includedDescription;
+
+                includedBadge.setAttribute(
+                    "aria-label",
+                    includedDescription
+                );
+
+                header.appendChild(
+                    includedBadge
+                );
+            }
 
             if (selectedNodes.length > 0) {
                 const clearLevelButton =
@@ -528,17 +572,66 @@ export class HierarchyRenderer {
         const button =
             document.createElement("button");
 
-        const isSelected =
-            selection.isSelected(node);
+        const selectionState =
+            multipleSelectionEnabled
+                ? selection.getSelectionState(node)
+                : selection.isSelected(node)
+                    ? HierarchySelectionState.Explicit
+                    : HierarchySelectionState.Unselected;
+
+        const isIncluded =
+            selectionState !==
+            HierarchySelectionState.Unselected;
 
         button.className =
             "hierarchy-level__value";
 
         button.type = "button";
-        button.textContent = node.value;
         button.dataset.nodeKey = node.key;
         button.dataset.level =
             node.level.toString();
+
+        if (
+            selectionState !==
+            HierarchySelectionState.Unselected
+        ) {
+            const indicator =
+                document.createElement("span");
+
+            indicator.className =
+                "hierarchy-level__value-indicator";
+
+            indicator.setAttribute(
+                "aria-hidden",
+                "true"
+            );
+
+            switch (selectionState) {
+                case HierarchySelectionState.Explicit:
+                    indicator.textContent = "✓";
+                    break;
+
+                case HierarchySelectionState.Partial:
+                    indicator.textContent = "−";
+                    break;
+
+                case HierarchySelectionState.Inherited:
+                    indicator.textContent = "↳";
+                    break;
+            }
+
+            button.appendChild(indicator);
+        }
+
+        const label =
+            document.createElement("span");
+
+        label.className =
+            "hierarchy-level__value-label";
+
+        label.textContent = node.value;
+
+        button.appendChild(label);
 
         if (isAlternative) {
             button.classList.add(
@@ -546,30 +639,95 @@ export class HierarchyRenderer {
             );
         }
 
-        button.title = node.value;
+        switch (selectionState) {
+            case HierarchySelectionState.Explicit:
+                button.classList.add(
+                    "hierarchy-level__value--selected"
+                );
 
-        const accessibleLabel =
-            isSelected
-                ? `Deselect ${node.value}`
-                : isAlternative &&
+                button.title =
+                    `${node.value} — explicitly selected`;
+
+                button.setAttribute(
+                    "aria-label",
+                    `Deselect ${node.value}`
+                );
+
+                button.setAttribute(
+                    "aria-pressed",
+                    "true"
+                );
+                break;
+
+            case HierarchySelectionState.Partial:
+                button.classList.add(
+                    "hierarchy-level__value--partial"
+                );
+
+                button.title =
+                    `${node.value} contains selected values`;
+
+                button.setAttribute(
+                    "aria-label",
+                    `Clear selected values under ${node.value}`
+                );
+
+                button.setAttribute(
+                    "aria-pressed",
+                    "mixed"
+                );
+                break;
+
+            case HierarchySelectionState.Inherited: {
+                button.classList.add(
+                    "hierarchy-level__value--inherited"
+                );
+
+                const inheritedFrom =
+                    selection.getInheritedFromNode(
+                        node
+                    );
+
+                const inheritedDescription =
+                    inheritedFrom
+                        ? `${node.value} is included through ${inheritedFrom.value}`
+                        : `${node.value} is included through a higher-level selection`;
+
+                button.title =
+                    inheritedDescription;
+
+                button.setAttribute(
+                    "aria-label",
+                    `${inheritedDescription}. Select ${node.value} explicitly`
+                );
+
+                button.setAttribute(
+                    "aria-pressed",
+                    "true"
+                );
+                break;
+            }
+
+            default: {
+                button.title = node.value;
+
+                const accessibleLabel =
+                    isAlternative &&
                     !multipleSelectionEnabled
-                    ? `Switch selection path to ${node.value}`
-                    : `Select ${node.value}`;
+                        ? `Switch selection path to ${node.value}`
+                        : `Select ${node.value}`;
 
-        button.setAttribute(
-            "aria-label",
-            accessibleLabel
-        );
+                button.setAttribute(
+                    "aria-label",
+                    accessibleLabel
+                );
 
-        button.setAttribute(
-            "aria-pressed",
-            String(isSelected)
-        );
-
-        if (isSelected) {
-            button.classList.add(
-                "hierarchy-level__value--selected"
-            );
+                button.setAttribute(
+                    "aria-pressed",
+                    "false"
+                );
+                break;
+            }
         }
 
         button.addEventListener(

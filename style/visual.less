@@ -111,6 +111,40 @@
     white-space: nowrap;
 }
 
+.hierarchy-level__included-count {
+    box-sizing: border-box;
+    flex: 0 0 auto;
+    padding: 2px 5px;
+    overflow: hidden;
+    border-radius: 999px;
+    background:
+        var(
+            --hierarchy-selected-background,
+            #e1dfdd
+        );
+    color:
+        var(
+            --hierarchy-selected-text,
+            #242424
+        );
+    font-family:
+        var(
+            --hierarchy-heading-font-family,
+            Arial,
+            sans-serif
+        );
+    font-size:
+        var(
+            --hierarchy-included-count-font-size,
+            10px
+        );
+    font-weight:
+        var(--hierarchy-heading-weight, 600);
+    line-height: 1.2;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 .hierarchy-level__clear {
     box-sizing: border-box;
     width: 24px;
@@ -245,10 +279,13 @@
 
 .hierarchy-level__value {
     box-sizing: border-box;
+    display: flex;
     width: 100%;
     min-height:
         var(--hierarchy-value-height, 32px);
     flex: 0 0 auto;
+    align-items: center;
+    gap: 6px;
     padding: 6px 10px;
     overflow: hidden;
     border: 1px solid transparent;
@@ -267,9 +304,23 @@
         var(--hierarchy-value-font-size, 12px);
     line-height: 1.2;
     text-align: left;
+    cursor: pointer;
+}
+
+.hierarchy-level__value-indicator {
+    width: 14px;
+    flex: 0 0 14px;
+    font-weight: 700;
+    line-height: 1;
+    text-align: center;
+}
+
+.hierarchy-level__value-label {
+    min-width: 0;
+    flex: 1 1 auto;
+    overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    cursor: pointer;
 }
 
 .hierarchy-level__value:hover {
@@ -307,6 +358,30 @@
         );
 }
 
+.hierarchy-level__value--partial {
+    border-color:
+        var(
+            --hierarchy-border-colour,
+            #605e5c
+        );
+    border-style: dashed;
+    background: transparent;
+    color:
+        var(
+            --hierarchy-selected-text,
+            #242424
+        );
+    font-weight: 600;
+}
+
+.hierarchy-level__value--partial:hover {
+    background:
+        var(
+            --hierarchy-hover-background,
+            #f0f0f0
+        );
+}
+
 .hierarchy-level__alternative-divider {
     width: calc(100% - 8px);
     height: 1px;
@@ -316,6 +391,28 @@
         var(
             --hierarchy-border-colour,
             #d1d1d1
+        );
+}
+
+.hierarchy-level__value--inherited {
+    box-shadow:
+        inset 3px 0 0
+        var(
+            --hierarchy-selected-background,
+            #e1dfdd
+        );
+    color:
+        var(
+            --hierarchy-selected-text,
+            #242424
+        );
+}
+
+.hierarchy-level__value--inherited:hover {
+    background:
+        var(
+            --hierarchy-hover-background,
+            #f0f0f0
         );
 }
 

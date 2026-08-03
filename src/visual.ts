@@ -311,6 +311,14 @@ export class Visual implements IVisual {
                 28
             );
 
+        const includedCountFontSize =
+            Math.max(
+                8,
+                Math.round(
+                    headingFontSize * 0.8
+                )
+            );
+
         const alternativeOpacity =
             this.clampNumber(
                 colours.alternativeOpacity.value,
@@ -421,6 +429,11 @@ export class Visual implements IVisual {
         this.setCssVariable(
             "--hierarchy-heading-font-size",
             `${headingFontSize}px`
+        );
+
+        this.setCssVariable(
+            "--hierarchy-included-count-font-size",
+            `${includedCountFontSize}px`
         );
 
         this.setCssVariable(
@@ -579,7 +592,11 @@ export class Visual implements IVisual {
                 .layoutCard
                 .showClearAll
                 .value,
-            this.isMultipleSelectionEnabled()
+            this.isMultipleSelectionEnabled(),
+            this.formattingSettings
+                .selectionCard
+                .showIncludedCounts
+                .value
         );
     }
 

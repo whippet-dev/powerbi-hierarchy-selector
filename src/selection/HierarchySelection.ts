@@ -9,6 +9,13 @@ import {
     HierarchyNode
 } from "../models/hierarchy";
 
+export enum HierarchySelectionState {
+    Unselected = "unselected",
+    Explicit = "explicit",
+    Inherited = "inherited",
+    Partial = "partial"
+}
+
 export class HierarchySelection {
     private readonly selectedEndpointKeys =
         new Set<string>();
@@ -166,6 +173,64 @@ export class HierarchySelection {
                 .get(node.level)
                 ?.has(node.key) ??
             false
+        );
+    }
+
+    public getSelectionState(
+        node: HierarchyNode
+    ): HierarchySelectionState {
+        if (
+            this.selectedEndpointKeys.has(
+                node.key
+            )
+        ) {
+            return HierarchySelectionState.Explicit;
+        }
+
+        if (this.getInheritedFromNode(node)) {
+            return HierarchySelectionState.Inherited;
+        }
+
+        if (this.isSelected(node)) {
+            return HierarchySelectionState.Partial;
+        }
+
+        return HierarchySelectionState.Unselected;
+    }
+
+    public getInheritedFromNode(
+        node: HierarchyNode
+    ): HierarchyNode | null {
+        let currentNode = node.parent;
+
+        while (currentNode) {
+            if (
+                this.selectedEndpointKeys.has(
+                    currentNode.key
+                )
+            ) {
+                return currentNode;
+            }
+
+            currentNode = currentNode.parent;
+        }
+
+        return null;
+    }
+
+    public getInheritedNodesAtLevel(
+        level: number,
+        levels: HierarchyLevel[]
+    ): HierarchyNode[] {
+        return (
+            levels[level]?.nodes.filter(
+                (node) =>
+                    this.getSelectionState(
+                        node
+                    ) ===
+                    HierarchySelectionState
+                        .Inherited
+            ) ?? []
         );
     }
 
