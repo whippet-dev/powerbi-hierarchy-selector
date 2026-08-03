@@ -46,7 +46,6 @@ export class HierarchyRenderer {
         clearAllButton.textContent = "Clear all";
         clearAllButton.title =
             "Clear all field selections";
-
         clearAllButton.disabled = !hasSelection;
 
         clearAllButton.setAttribute(
@@ -150,9 +149,53 @@ export class HierarchyRenderer {
                     emptyMessage
                 );
             } else {
+                const selectedNode =
+                    selectedKey === undefined
+                        ? undefined
+                        : hierarchyLevel.nodes.find(
+                            (node) =>
+                                node.key === selectedKey
+                        );
+
+                if (selectedNode) {
+                    const selectedContainer =
+                        document.createElement("div");
+
+                    selectedContainer.className =
+                        "hierarchy-level__selected";
+
+                    selectedContainer.appendChild(
+                        this.createValueButton(
+                            selectedNode,
+                            selection,
+                            onNodeSelection,
+                            false
+                        )
+                    );
+
+                    valuesContainer.appendChild(
+                        selectedContainer
+                    );
+                }
+
+                const scrollContainer =
+                    document.createElement("div");
+
+                scrollContainer.className =
+                    "hierarchy-level__scroll";
+
+                const scrollableNodes =
+                    selectedNode
+                        ? hierarchyLevel.nodes.filter(
+                            (node) =>
+                                node.key !==
+                                selectedNode.key
+                        )
+                        : hierarchyLevel.nodes;
+
                 let alternativeDividerAdded = false;
 
-                for (const node of hierarchyLevel.nodes) {
+                for (const node of scrollableNodes) {
                     const isAlternative =
                         !hierarchyLevel
                             .compatibleNodeKeys
@@ -162,14 +205,14 @@ export class HierarchyRenderer {
                         isAlternative &&
                         !alternativeDividerAdded
                     ) {
-                        valuesContainer.appendChild(
+                        scrollContainer.appendChild(
                             this.createAlternativeDivider()
                         );
 
                         alternativeDividerAdded = true;
                     }
 
-                    valuesContainer.appendChild(
+                    scrollContainer.appendChild(
                         this.createValueButton(
                             node,
                             selection,
@@ -178,6 +221,10 @@ export class HierarchyRenderer {
                         )
                     );
                 }
+
+                valuesContainer.appendChild(
+                    scrollContainer
+                );
             }
 
             levelElement.appendChild(header);
@@ -205,7 +252,8 @@ export class HierarchyRenderer {
         heading.className =
             "hierarchy-selector__landing-heading";
 
-        heading.textContent = "Build a multi-field selector";
+        heading.textContent =
+            "Build a multi-field selector";
 
         const instructions =
             document.createElement("div");
@@ -222,7 +270,8 @@ export class HierarchyRenderer {
         this.container.appendChild(landingPage);
     }
 
-    private createAlternativeDivider(): HTMLDivElement {
+    private createAlternativeDivider():
+        HTMLDivElement {
         const divider =
             document.createElement("div");
 
@@ -251,7 +300,6 @@ export class HierarchyRenderer {
 
         button.type = "button";
         button.textContent = node.value;
-
         button.dataset.nodeKey = node.key;
         button.dataset.level =
             node.level.toString();

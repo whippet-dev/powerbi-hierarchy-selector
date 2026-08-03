@@ -28,10 +28,10 @@
 
 .hierarchy-selector__toolbar {
     display: flex;
+    min-height: 26px;
     flex: 0 0 auto;
     align-items: center;
     justify-content: flex-end;
-    min-height: 26px;
 }
 
 .hierarchy-selector__clear-all {
@@ -171,7 +171,7 @@
         var(--hierarchy-value-gap, 4px);
     padding:
         var(--hierarchy-container-padding, 4px);
-    overflow-y: auto;
+    overflow: hidden;
     border-style: solid;
     border-width:
         var(
@@ -193,6 +193,26 @@
             --hierarchy-container-background,
             transparent
         );
+}
+
+.hierarchy-level__selected {
+    display: flex;
+    min-height: 0;
+    flex: 0 0 auto;
+    flex-direction: column;
+    gap:
+        var(--hierarchy-value-gap, 4px);
+}
+
+.hierarchy-level__scroll {
+    box-sizing: border-box;
+    display: flex;
+    min-height: 0;
+    flex: 1 1 auto;
+    flex-direction: column;
+    gap:
+        var(--hierarchy-value-gap, 4px);
+    overflow-y: auto;
 }
 
 .hierarchy-level__value {
