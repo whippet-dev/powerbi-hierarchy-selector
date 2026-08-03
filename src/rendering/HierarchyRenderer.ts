@@ -9,6 +9,9 @@ import type {
 } from "../view/HierarchyView";
 
 export class HierarchyRenderer {
+    private readonly searchTerms =
+        new Map<number, string>();
+
     public constructor(
         private readonly container: HTMLDivElement
     ) {}
@@ -20,6 +23,10 @@ export class HierarchyRenderer {
         onClearAll: () => void,
         onLevelClear: (levelIndex: number) => void
     ): void {
+        this.pruneSearchTerms(
+            hierarchyLevels.length
+        );
+
         this.container.replaceChildren();
 
         const selectedPath =
@@ -92,13 +99,18 @@ export class HierarchyRenderer {
             heading.className =
                 "hierarchy-level__label";
 
-            heading.textContent = hierarchyLevel.name;
-            heading.title = hierarchyLevel.name;
+            heading.textContent =
+                hierarchyLevel.name;
+
+            heading.title =
+                hierarchyLevel.name;
 
             header.appendChild(heading);
 
             const selectedKey =
-                selection.getSelectedKey(levelIndex);
+                selection.getSelectedKey(
+                    levelIndex
+                );
 
             if (selectedKey !== undefined) {
                 const clearLevelButton =
@@ -122,7 +134,8 @@ export class HierarchyRenderer {
 
                 clearLevelButton.addEventListener(
                     "click",
-                    () => onLevelClear(levelIndex)
+                    () =>
+                        onLevelClear(levelIndex)
                 );
 
                 header.appendChild(
@@ -136,14 +149,17 @@ export class HierarchyRenderer {
             valuesContainer.className =
                 "hierarchy-level__values";
 
-            if (hierarchyLevel.nodes.length === 0) {
+            if (
+                hierarchyLevel.nodes.length === 0
+            ) {
                 const emptyMessage =
                     document.createElement("div");
 
                 emptyMessage.className =
                     "hierarchy-level__empty";
 
-                emptyMessage.textContent = "No values";
+                emptyMessage.textContent =
+                    "No values";
 
                 valuesContainer.appendChild(
                     emptyMessage
@@ -154,7 +170,8 @@ export class HierarchyRenderer {
                         ? undefined
                         : hierarchyLevel.nodes.find(
                             (node) =>
-                                node.key === selectedKey
+                                node.key ===
+                                selectedKey
                         );
 
                 if (selectedNode) {
@@ -178,66 +195,71 @@ export class HierarchyRenderer {
                     );
                 }
 
+                const searchContainer =
+                    this.createSearchControl(
+                        hierarchyLevel.name,
+                        levelIndex
+                    );
+
+                valuesContainer.appendChild(
+                    searchContainer
+                );
+
                 const scrollContainer =
                     document.createElement("div");
 
                 scrollContainer.className =
                     "hierarchy-level__scroll";
 
-                const scrollableNodes =
-                    selectedNode
-                        ? hierarchyLevel.nodes.filter(
-                            (node) =>
-                                node.key !==
-                                selectedNode.key
-                        )
-                        : hierarchyLevel.nodes;
-
-                let alternativeDividerAdded = false;
-
-                for (const node of scrollableNodes) {
-                    const isAlternative =
-                        !hierarchyLevel
-                            .compatibleNodeKeys
-                            .has(node.key);
-
-                    if (
-                        isAlternative &&
-                        !alternativeDividerAdded
-                    ) {
-                        scrollContainer.appendChild(
-                            this.createAlternativeDivider()
-                        );
-
-                        alternativeDividerAdded = true;
-                    }
-
-                    scrollContainer.appendChild(
-                        this.createValueButton(
-                            node,
-                            selection,
-                            onNodeSelection,
-                            isAlternative
-                        )
-                    );
-                }
-
                 valuesContainer.appendChild(
                     scrollContainer
                 );
+
+                const refreshSearchResults =
+                    (): void => {
+                        this.renderSearchResults(
+                            scrollContainer,
+                            hierarchyLevel,
+                            selectedNode,
+                            selection,
+                            onNodeSelection,
+                            this.searchTerms.get(
+                                levelIndex
+                            ) ?? ""
+                        );
+                    };
+
+                const searchInput =
+                    searchContainer.querySelector(
+                        "input"
+                    );
+
+                searchInput?.addEventListener(
+                    "input",
+                    refreshSearchResults
+                );
+
+                refreshSearchResults();
             }
 
             levelElement.appendChild(header);
-            levelElement.appendChild(valuesContainer);
+            levelElement.appendChild(
+                valuesContainer
+            );
 
-            levelsContainer.appendChild(levelElement);
+            levelsContainer.appendChild(
+                levelElement
+            );
         }
 
         this.container.appendChild(toolbar);
-        this.container.appendChild(levelsContainer);
+        this.container.appendChild(
+            levelsContainer
+        );
     }
 
     public renderLandingPage(): void {
+        this.searchTerms.clear();
         this.container.replaceChildren();
 
         const landingPage =
@@ -270,6 +292,177 @@ export class HierarchyRenderer {
         this.container.appendChild(landingPage);
     }
 
+    private createSearchControl(
+        fieldName: string,
+        levelIndex: number
+    ): HTMLDivElement {
+        const searchContainer =
+            document.createElement("div");
+
+        searchContainer.className =
+            "hierarchy-level__search";
+
+        const searchInput =
+            document.createElement("input");
+
+        searchInput.className =
+            "hierarchy-level__search-input";
+
+        searchInput.type = "search";
+        searchInput.placeholder =
+            `Search ${fieldName}`;
+
+        searchInput.value =
+            this.searchTerms.get(levelIndex) ??
+            "";
+
+        searchInput.autocomplete = "off";
+        searchInput.spellcheck = false;
+
+        searchInput.setAttribute(
+            "aria-label",
+            `Search ${fieldName} values`
+        );
+
+        searchInput.addEventListener(
+            "input",
+            () => {
+                const searchTerm =
+                    searchInput.value;
+
+                if (searchTerm.length === 0) {
+                    this.searchTerms.delete(
+                        levelIndex
+                    );
+                } else {
+                    this.searchTerms.set(
+                        levelIndex,
+                        searchTerm
+                    );
+                }
+            }
+        );
+
+        searchInput.addEventListener(
+            "keydown",
+            (event) => {
+                if (
+                    event.key !== "Escape" ||
+                    searchInput.value.length === 0
+                ) {
+                    return;
+                }
+
+                event.preventDefault();
+
+                searchInput.value = "";
+                this.searchTerms.delete(
+                    levelIndex
+                );
+
+                searchInput.dispatchEvent(
+                    new Event("input")
+                );
+            }
+        );
+
+        searchContainer.appendChild(
+            searchInput
+        );
+
+        return searchContainer;
+    }
+
+    private renderSearchResults(
+        scrollContainer: HTMLDivElement,
+        hierarchyLevel: HierarchyViewLevel,
+        selectedNode: HierarchyNode | undefined,
+        selection: HierarchySelection,
+        onNodeSelection: (node: HierarchyNode) => void,
+        searchTerm: string
+    ): void {
+        scrollContainer.replaceChildren();
+
+        const normalizedSearchTerm =
+            searchTerm
+                .trim()
+                .toLocaleLowerCase();
+
+        const scrollableNodes =
+            hierarchyLevel.nodes.filter(
+                (node) =>
+                    node.key !== selectedNode?.key
+            );
+
+        const matchingNodes =
+            normalizedSearchTerm.length === 0
+                ? scrollableNodes
+                : scrollableNodes.filter(
+                    (node) =>
+                        node.value
+                            .toLocaleLowerCase()
+                            .includes(
+                                normalizedSearchTerm
+                            )
+                );
+
+        if (matchingNodes.length === 0) {
+            const noMatches =
+                document.createElement("div");
+
+            noMatches.className =
+                "hierarchy-level__no-matches";
+
+            noMatches.textContent =
+                "No matching values";
+
+            scrollContainer.appendChild(
+                noMatches
+            );
+
+            return;
+        }
+
+        const hasCompatibleMatch =
+            matchingNodes.some(
+                (node) =>
+                    hierarchyLevel
+                        .compatibleNodeKeys
+                        .has(node.key)
+            );
+
+        let alternativeDividerAdded =
+            false;
+
+        for (const node of matchingNodes) {
+            const isAlternative =
+                !hierarchyLevel
+                    .compatibleNodeKeys
+                    .has(node.key);
+
+            if (
+                isAlternative &&
+                hasCompatibleMatch &&
+                !alternativeDividerAdded
+            ) {
+                scrollContainer.appendChild(
+                    this.createAlternativeDivider()
+                );
+
+                alternativeDividerAdded = true;
+            }
+
+            scrollContainer.appendChild(
+                this.createValueButton(
+                    node,
+                    selection,
+                    onNodeSelection,
+                    isAlternative
+                )
+            );
+        }
+    }
+
     private createAlternativeDivider():
         HTMLDivElement {
         const divider =
@@ -278,7 +471,10 @@ export class HierarchyRenderer {
         divider.className =
             "hierarchy-level__alternative-divider";
 
-        divider.setAttribute("role", "separator");
+        divider.setAttribute(
+            "role",
+            "separator"
+        );
 
         return divider;
     }
@@ -344,5 +540,20 @@ export class HierarchyRenderer {
         );
 
         return button;
+    }
+
+    private pruneSearchTerms(
+        levelCount: number
+    ): void {
+        for (
+            const levelIndex of
+            this.searchTerms.keys()
+        ) {
+            if (levelIndex >= levelCount) {
+                this.searchTerms.delete(
+                    levelIndex
+                );
+            }
+        }
     }
 }
