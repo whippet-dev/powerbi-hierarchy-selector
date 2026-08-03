@@ -22,7 +22,8 @@ export class HierarchyRenderer {
         onNodeSelection: (node: HierarchyNode) => void,
         onClearAll: () => void,
         onLevelClear: (levelIndex: number) => void,
-        showSearchBoxes: boolean
+        showSearchBoxes: boolean,
+        minimumValuesForSearch: number
     ): void {
         this.pruneSearchTerms(
             hierarchyLevels.length
@@ -85,6 +86,17 @@ export class HierarchyRenderer {
         ) {
             const hierarchyLevel =
                 hierarchyLevels[levelIndex];
+
+            const shouldShowSearch =
+                showSearchBoxes &&
+                hierarchyLevel.nodes.length >=
+                    minimumValuesForSearch;
+
+            if (!shouldShowSearch) {
+                this.searchTerms.delete(
+                    levelIndex
+                );
+            }
 
             const levelElement =
                 document.createElement("section");
@@ -218,7 +230,7 @@ export class HierarchyRenderer {
                             selectedNode,
                             selection,
                             onNodeSelection,
-                            showSearchBoxes
+                            shouldShowSearch
                                 ? this.searchTerms.get(
                                     levelIndex
                                 ) ?? ""
@@ -226,7 +238,7 @@ export class HierarchyRenderer {
                         );
                     };
 
-                if (showSearchBoxes) {
+                if (shouldShowSearch) {
                     const searchContainer =
                         this.createSearchControl(
                             hierarchyLevel.name,

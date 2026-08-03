@@ -15,8 +15,8 @@ The fields do not need to be configured as a formal Power BI hierarchy.
 
 - Multiple related fields displayed in one selector
 - Context-aware values across fields
-- Independent search within every field
-- Optional show/hide control for all search boxes
+- Search automatically shown for fields with enough values
+- Global search visibility toggle and configurable value threshold
 - Selected values pinned above scrolling lists
 - Report filtering using Power BI filter APIs
 - Selection persistence when reports are saved and reopened

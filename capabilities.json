@@ -265,6 +265,12 @@
                         "numeric": true
                     }
                 },
+                "minimumValuesForSearch": {
+                    "displayName": "Minimum values for search",
+                    "type": {
+                        "numeric": true
+                    }
+                },
                 "showSearchBoxes": {
                     "displayName": "Show search boxes",
                     "type": {

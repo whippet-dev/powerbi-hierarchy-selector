@@ -506,7 +506,15 @@ export class Visual implements IVisual {
             this.formattingSettings
                 .layoutCard
                 .showSearchBoxes
-                .value
+                .value,
+            this.clampNumber(
+                this.formattingSettings
+                    .layoutCard
+                    .minimumValuesForSearch
+                    .value,
+                1,
+                10000
+            )
         );
     }
 

@@ -522,6 +522,27 @@ class LayoutCardSettings extends FormattingSettingsCard {
             }
         });
 
+    public minimumValuesForSearch =
+        new formattingSettings.NumUpDown({
+            name: "minimumValuesForSearch",
+            displayName: "Minimum values for search",
+            description:
+                "Show search only when a field contains at least this many distinct values.",
+            value: 8,
+            options: {
+                minValue: {
+                    type:
+                        powerbi.visuals.ValidatorType.Min,
+                    value: 1
+                },
+                maxValue: {
+                    type:
+                        powerbi.visuals.ValidatorType.Max,
+                    value: 10000
+                }
+            }
+        });
+
     public showSearchBoxes =
         new formattingSettings.ToggleSwitch({
             name: "showSearchBoxes",
@@ -548,6 +569,7 @@ class LayoutCardSettings extends FormattingSettingsCard {
         this.levelGap,
         this.minimumLevelWidth,
         this.showSearchBoxes,
+        this.minimumValuesForSearch,
         this.showClearAll
     ];
 }
