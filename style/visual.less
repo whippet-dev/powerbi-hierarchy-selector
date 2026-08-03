@@ -6,9 +6,18 @@
     min-height: 0;
     flex-direction: column;
     gap: 6px;
-    padding: 12px;
+    padding:
+        var(--hierarchy-visual-padding, 12px);
     overflow: hidden;
     font-family: Arial, sans-serif;
+}
+
+.hierarchy-selector--hide-clear-all {
+    gap: 0;
+}
+
+.hierarchy-selector--hide-clear-all .hierarchy-selector__toolbar {
+    display: none;
 }
 
 .hierarchy-selector__toolbar {
@@ -26,14 +35,17 @@
     border: 1px solid transparent;
     border-radius: 4px;
     background: transparent;
-    color: #242424;
+    color:
+        var(--hierarchy-value-text, #242424);
     font: inherit;
     font-size: 12px;
     cursor: pointer;
 }
 
 .hierarchy-selector__clear-all:hover:not(:disabled) {
-    background: #f0f0f0;
+    background:
+        var(--hierarchy-hover-background,
+            #f0f0f0);
 }
 
 .hierarchy-selector__clear-all:disabled {
@@ -52,7 +64,8 @@
     min-height: 0;
     flex: 1 1 auto;
     align-items: stretch;
-    gap: 12px;
+    gap:
+        var(--hierarchy-level-gap, 12px);
     overflow: auto;
 }
 
@@ -68,7 +81,10 @@
 .hierarchy-level__header {
     display: flex;
     min-width: 0;
-    min-height: 24px;
+    min-height:
+        max(24px,
+            calc(var(--hierarchy-heading-font-size,
+                    12px) * 1.4));
     flex: 0 0 auto;
     align-items: center;
     gap: 4px;
@@ -78,9 +94,13 @@
     min-width: 0;
     flex: 1 1 auto;
     overflow: hidden;
-    font-size: 12px;
+    color:
+        var(--hierarchy-heading-text, #242424);
+    font-size:
+        var(--hierarchy-heading-font-size,
+            12px);
     font-weight: 600;
-    line-height: 18px;
+    line-height: 1.2;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
@@ -94,7 +114,8 @@
     border: 1px solid transparent;
     border-radius: 4px;
     background: transparent;
-    color: #242424;
+    color:
+        var(--hierarchy-heading-text, #242424);
     font-family: Arial, sans-serif;
     font-size: 18px;
     line-height: 20px;
@@ -103,7 +124,9 @@
 }
 
 .hierarchy-level__clear:hover {
-    background: #f0f0f0;
+    background:
+        var(--hierarchy-hover-background,
+            #f0f0f0);
 }
 
 .hierarchy-level__clear:focus-visible {
@@ -117,27 +140,33 @@
     min-height: 0;
     flex: 1 1 auto;
     flex-direction: column;
-    gap: 4px;
+    gap:
+        var(--hierarchy-value-gap, 4px);
     padding: 4px;
     overflow-y: auto;
-    border: 1px solid #d1d1d1;
+    border: 1px solid var(--hierarchy-border-colour,
+            #d1d1d1);
     border-radius: 4px;
 }
 
 .hierarchy-level__value {
     box-sizing: border-box;
     width: 100%;
-    min-height: 32px;
+    min-height:
+        var(--hierarchy-value-height, 32px);
+    flex: 0 0 auto;
     padding: 6px 10px;
     overflow: hidden;
     border: 1px solid transparent;
     border-radius:
         var(--hierarchy-value-radius, 4px);
     background: transparent;
-    color: #242424;
+    color:
+        var(--hierarchy-value-text, #242424);
     font: inherit;
     font-size:
         var(--hierarchy-value-font-size, 12px);
+    line-height: 1.2;
     text-align: left;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -145,25 +174,28 @@
 }
 
 .hierarchy-level__value:hover {
-    background: #f0f0f0;
+    background:
+        var(--hierarchy-hover-background,
+            #f0f0f0);
 }
 
 .hierarchy-level__value--selected {
-    border-color: #605e5c;
+    border-color:
+        var(--hierarchy-border-colour,
+            #605e5c);
     background:
-        var(
-            --hierarchy-selected-background,
-            #e1dfdd
-        );
+        var(--hierarchy-selected-background,
+            #e1dfdd);
+    color:
+        var(--hierarchy-selected-text,
+            #242424);
     font-weight: 600;
 }
 
 .hierarchy-level__value--selected:hover {
     background:
-        var(
-            --hierarchy-selected-background,
-            #e1dfdd
-        );
+        var(--hierarchy-selected-background,
+            #e1dfdd);
 }
 
 .hierarchy-level__alternative-divider {
@@ -171,11 +203,15 @@
     height: 1px;
     flex: 0 0 1px;
     margin: 3px 4px;
-    background: #d1d1d1;
+    background:
+        var(--hierarchy-border-colour,
+            #d1d1d1);
 }
 
 .hierarchy-level__value--alternative {
-    color: #6b6b6b;
+    color:
+        var(--hierarchy-alternative-text,
+            #6b6b6b);
     opacity: 0.65;
 }
 

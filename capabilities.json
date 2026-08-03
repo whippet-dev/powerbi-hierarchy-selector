@@ -26,8 +26,20 @@
                         "numeric": true
                     }
                 },
+                "buttonHeight": {
+                    "displayName": "Value height",
+                    "type": {
+                        "numeric": true
+                    }
+                },
                 "buttonRadius": {
                     "displayName": "Value corner radius",
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "buttonGap": {
+                    "displayName": "Gap between values",
                     "type": {
                         "numeric": true
                     }
@@ -37,6 +49,36 @@
         "colours": {
             "displayName": "Colours",
             "properties": {
+                "valueText": {
+                    "displayName": "Value text",
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "hoverBackground": {
+                    "displayName": "Hover background",
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "selectedText": {
+                    "displayName": "Selected text",
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
                 "selectedBackground": {
                     "displayName": "Selected background",
                     "type": {
@@ -45,6 +87,70 @@
                                 "color": true
                             }
                         }
+                    }
+                },
+                "alternativeText": {
+                    "displayName": "Alternative text",
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                },
+                "borderColour": {
+                    "displayName": "Borders and dividers",
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "headings": {
+            "displayName": "Headings",
+            "properties": {
+                "fontSize": {
+                    "displayName": "Heading text size",
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "textColour": {
+                    "displayName": "Heading text",
+                    "type": {
+                        "fill": {
+                            "solid": {
+                                "color": true
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "layout": {
+            "displayName": "Layout",
+            "properties": {
+                "visualPadding": {
+                    "displayName": "Visual padding",
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "levelGap": {
+                    "displayName": "Gap between levels",
+                    "type": {
+                        "numeric": true
+                    }
+                },
+                "showClearAll": {
+                    "displayName": "Show Clear all",
+                    "type": {
+                        "bool": true
                     }
                 }
             }
