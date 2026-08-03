@@ -15,12 +15,15 @@ The fields do not need to be configured as a formal Power BI hierarchy.
 
 - Multiple related fields displayed in one selector
 - Context-aware values across fields
+- Independent search within every field
+- Optional show/hide control for all search boxes
+- Selected values pinned above scrolling lists
 - Report filtering using Power BI filter APIs
 - Selection persistence when reports are saved and reopened
 - Bookmark support
 - Clear all and per-field clear controls
 - Configurable fonts, colours, spacing and containers
-- Keyboard-accessible buttons and labels
+- Keyboard-accessible buttons, search boxes and labels
 
 ## Status
 
@@ -29,6 +32,5 @@ The fields do not need to be configured as a formal Power BI hierarchy.
 ## Planned features
 
 - Multi-select
-- Search
 - Further accessibility testing
 - Microsoft certification

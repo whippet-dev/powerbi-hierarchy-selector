@@ -353,7 +353,7 @@ class LevelContainersCardSettings
             name: "innerPadding",
             displayName: "Inner padding",
             description:
-                "Set the space between a level container's border and its field values.",
+                "Set the space between a field container's border and its field values.",
             value: 4,
             options: {
                 minValue: {
@@ -388,7 +388,7 @@ class ClearControlsCardSettings
             name: "textColour",
             displayName: "Text and icon",
             description:
-                "Set the colour used by the Clear all text and the per-level clear icons.",
+                "Set the colour used by the Clear all text and the per-field clear icons.",
             value: {
                 value: "#242424"
             }
@@ -522,12 +522,21 @@ class LayoutCardSettings extends FormattingSettingsCard {
             }
         });
 
+    public showSearchBoxes =
+        new formattingSettings.ToggleSwitch({
+            name: "showSearchBoxes",
+            displayName: "Show search boxes",
+            description:
+                "Show or hide the search box in every field.",
+            value: true
+        });
+
     public showClearAll =
         new formattingSettings.ToggleSwitch({
             name: "showClearAll",
             displayName: "Show Clear all",
             description:
-                "Show or hide the Clear all control above the hierarchy levels.",
+                "Show or hide the Clear all control above the fields.",
             value: true
         });
 
@@ -538,6 +547,7 @@ class LayoutCardSettings extends FormattingSettingsCard {
         this.visualPadding,
         this.levelGap,
         this.minimumLevelWidth,
+        this.showSearchBoxes,
         this.showClearAll
     ];
 }

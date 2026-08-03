@@ -502,7 +502,11 @@ export class Visual implements IVisual {
             () =>
                 this.handleClearAll(),
             (levelIndex) =>
-                this.handleLevelClear(levelIndex)
+                this.handleLevelClear(levelIndex),
+            this.formattingSettings
+                .layoutCard
+                .showSearchBoxes
+                .value
         );
     }
 

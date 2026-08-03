@@ -21,11 +21,16 @@ export class HierarchyRenderer {
         selection: HierarchySelection,
         onNodeSelection: (node: HierarchyNode) => void,
         onClearAll: () => void,
-        onLevelClear: (levelIndex: number) => void
+        onLevelClear: (levelIndex: number) => void,
+        showSearchBoxes: boolean
     ): void {
         this.pruneSearchTerms(
             hierarchyLevels.length
         );
+
+        if (!showSearchBoxes) {
+            this.searchTerms.clear();
+        }
 
         this.container.replaceChildren();
 
@@ -195,16 +200,6 @@ export class HierarchyRenderer {
                     );
                 }
 
-                const searchContainer =
-                    this.createSearchControl(
-                        hierarchyLevel.name,
-                        levelIndex
-                    );
-
-                valuesContainer.appendChild(
-                    searchContainer
-                );
-
                 const scrollContainer =
                     document.createElement("div");
 
@@ -223,21 +218,36 @@ export class HierarchyRenderer {
                             selectedNode,
                             selection,
                             onNodeSelection,
-                            this.searchTerms.get(
-                                levelIndex
-                            ) ?? ""
+                            showSearchBoxes
+                                ? this.searchTerms.get(
+                                    levelIndex
+                                ) ?? ""
+                                : ""
                         );
                     };
 
-                const searchInput =
-                    searchContainer.querySelector(
-                        "input"
+                if (showSearchBoxes) {
+                    const searchContainer =
+                        this.createSearchControl(
+                            hierarchyLevel.name,
+                            levelIndex
+                        );
+
+                    valuesContainer.insertBefore(
+                        searchContainer,
+                        scrollContainer
                     );
 
-                searchInput?.addEventListener(
-                    "input",
-                    refreshSearchResults
-                );
+                    const searchInput =
+                        searchContainer.querySelector(
+                            "input"
+                        );
+
+                    searchInput?.addEventListener(
+                        "input",
+                        refreshSearchResults
+                    );
+                }
 
                 refreshSearchResults();
             }

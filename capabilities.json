@@ -265,6 +265,12 @@
                         "numeric": true
                     }
                 },
+                "showSearchBoxes": {
+                    "displayName": "Show search boxes",
+                    "type": {
+                        "bool": true
+                    }
+                },
                 "showClearAll": {
                     "displayName": "Show Clear all",
                     "type": {
