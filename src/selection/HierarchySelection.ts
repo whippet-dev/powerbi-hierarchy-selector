@@ -234,6 +234,48 @@ export class HierarchySelection {
         );
     }
 
+    public selectNodes(
+        nodes: HierarchyNode[],
+        levels: HierarchyLevel[]
+    ): void {
+        const actionableNodes =
+            nodes.filter(
+                (node) => {
+                    const selectionState =
+                        this.getSelectionState(node);
+
+                    return (
+                        selectionState ===
+                            HierarchySelectionState
+                                .Unselected ||
+                        selectionState ===
+                            HierarchySelectionState
+                                .Partial
+                    );
+                }
+            );
+
+        if (actionableNodes.length === 0) {
+            return;
+        }
+
+        const currentEndpoints =
+            this.getSelectedEndpoints(levels);
+
+        this.lastSelectedEndpointKey =
+            actionableNodes[
+                actionableNodes.length - 1
+            ].key;
+
+        this.setEndpoints(
+            [
+                ...currentEndpoints,
+                ...actionableNodes
+            ],
+            levels
+        );
+    }
+
     public toggle(
         selectedNode: HierarchyNode,
         levels: HierarchyLevel[],

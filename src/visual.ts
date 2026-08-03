@@ -240,6 +240,17 @@ export class Visual implements IVisual {
         this.applyCurrentSelection();
     }
 
+    private handleSelectNodes(
+        selectedNodes: HierarchyNode[]
+    ): void {
+        this.selection.selectNodes(
+            selectedNodes,
+            this.hierarchyLevels
+        );
+
+        this.applyCurrentSelection();
+    }
+
     private handleClearAll(): void {
         this.selection.clear();
         this.applyCurrentSelection();
@@ -572,6 +583,8 @@ export class Visual implements IVisual {
             this.selection,
             (node) =>
                 this.handleNodeSelection(node),
+            (nodes) =>
+                this.handleSelectNodes(nodes),
             () =>
                 this.handleClearAll(),
             (levelIndex) =>
@@ -596,6 +609,10 @@ export class Visual implements IVisual {
             this.formattingSettings
                 .selectionCard
                 .showIncludedCounts
+                .value,
+            this.formattingSettings
+                .selectionCard
+                .showSelectAll
                 .value
         );
     }

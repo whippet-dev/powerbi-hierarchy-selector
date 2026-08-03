@@ -40,7 +40,14 @@
                     "type": {
                         "bool": true
                     }
+                },
+                "showSelectAll": {
+                    "displayName": "Show Select all",
+                    "type": {
+                        "bool": true
+                    }
                 }
+
 
             }
         },

@@ -27,13 +27,15 @@ export class HierarchyRenderer {
         hierarchyLevels: HierarchyViewLevel[],
         selection: HierarchySelection,
         onNodeSelection: (node: HierarchyNode) => void,
+        onSelectNodes: (nodes: HierarchyNode[]) => void,
         onClearAll: () => void,
         onLevelClear: (levelIndex: number) => void,
         showSearchBoxes: boolean,
         minimumValuesForSearch: number,
         showClearAll: boolean,
         multipleSelectionEnabled: boolean,
-        showIncludedCounts: boolean
+        showIncludedCounts: boolean,
+        showSelectAll: boolean
     ): void {
         this.pruneSearchTerms(
             hierarchyLevels.length
@@ -99,11 +101,24 @@ export class HierarchyRenderer {
 
             header.appendChild(heading);
 
-            const selectedNodes =
+            const selectedPathNodes =
                 selection.getSelectedNodesAtLevel(
                     levelIndex,
                     hierarchyLevels
                 );
+
+            const pinnedNodes =
+                multipleSelectionEnabled
+                    ? selectedPathNodes.filter(
+                        (node) =>
+                            selection
+                                .getSelectionState(
+                                    node
+                                ) ===
+                            HierarchySelectionState
+                                .Explicit
+                    )
+                    : selectedPathNodes;
 
             const inheritedNodes =
                 multipleSelectionEnabled
@@ -145,12 +160,14 @@ export class HierarchyRenderer {
                 );
             }
 
-            if (selectedNodes.length > 0) {
+            if (
+                selectedPathNodes.length > 0
+            ) {
                 const clearLevelButton =
                     document.createElement("button");
 
                 const accessibleLabel =
-                    selectedNodes.length === 1
+                    selectedPathNodes.length === 1
                         ? `Clear ${hierarchyLevel.name} selection`
                         : `Clear ${hierarchyLevel.name} selections`;
 
@@ -239,25 +256,28 @@ export class HierarchyRenderer {
             } else {
                 const selectedNodeKeys =
                     new Set<string>(
-                        selectedNodes.map(
+                        pinnedNodes.map(
                             (node) => node.key
                         )
                     );
 
-                if (selectedNodes.length > 0) {
-                    const selectedContainer =
+                let selectedContainer:
+                    HTMLDivElement | undefined;
+
+                if (pinnedNodes.length > 0) {
+                    selectedContainer =
                         document.createElement("div");
 
                     selectedContainer.className =
                         "hierarchy-level__selected";
 
                     for (
-                        const selectedNode of
-                        selectedNodes
+                        const pinnedNode of
+                        pinnedNodes
                     ) {
                         selectedContainer.appendChild(
                             this.createValueButton(
-                                selectedNode,
+                                pinnedNode,
                                 selection,
                                 onNodeSelection,
                                 false,
@@ -265,10 +285,6 @@ export class HierarchyRenderer {
                             )
                         );
                     }
-
-                    valuesContainer.appendChild(
-                        selectedContainer
-                    );
                 }
 
                 const scrollContainer =
@@ -281,8 +297,28 @@ export class HierarchyRenderer {
                     scrollContainer
                 );
 
+                const controlsContainer =
+                    document.createElement("div");
+
+                controlsContainer.className =
+                    "hierarchy-level__controls";
+
+                let selectAllButton:
+                    HTMLButtonElement | undefined;
+
+                const getSearchTerm =
+                    (): string =>
+                        shouldShowSearch
+                            ? this.searchTerms.get(
+                                levelIndex
+                            ) ?? ""
+                            : "";
+
                 const refreshSearchResults =
                     (): void => {
+                        const searchTerm =
+                            getSearchTerm();
+
                         this.renderSearchResults(
                             scrollContainer,
                             hierarchyLevel,
@@ -290,12 +326,17 @@ export class HierarchyRenderer {
                             selection,
                             onNodeSelection,
                             multipleSelectionEnabled,
-                            shouldShowSearch
-                                ? this.searchTerms.get(
-                                    levelIndex
-                                ) ?? ""
-                                : ""
+                            searchTerm
                         );
+
+                        if (selectAllButton) {
+                            this.updateSelectAllButton(
+                                selectAllButton,
+                                hierarchyLevel,
+                                selection,
+                                searchTerm
+                            );
+                        }
                     };
 
                 if (shouldShowSearch) {
@@ -305,9 +346,8 @@ export class HierarchyRenderer {
                             levelIndex
                         );
 
-                    valuesContainer.insertBefore(
-                        searchContainer,
-                        scrollContainer
+                    controlsContainer.appendChild(
+                        searchContainer
                     );
 
                     const searchInput =
@@ -318,6 +358,40 @@ export class HierarchyRenderer {
                     searchInput?.addEventListener(
                         "input",
                         refreshSearchResults
+                    );
+                }
+
+                if (
+                    multipleSelectionEnabled &&
+                    showSelectAll
+                ) {
+                    selectAllButton =
+                        this.createSelectAllButton(
+                            hierarchyLevel,
+                            selection,
+                            getSearchTerm,
+                            onSelectNodes
+                        );
+
+                    controlsContainer.appendChild(
+                        selectAllButton
+                    );
+                }
+
+                if (
+                    controlsContainer
+                        .childElementCount > 0
+                ) {
+                    valuesContainer.insertBefore(
+                        controlsContainer,
+                        scrollContainer
+                    );
+                }
+
+                if (selectedContainer) {
+                    valuesContainer.insertBefore(
+                        selectedContainer,
+                        scrollContainer
                     );
                 }
 
@@ -452,6 +526,169 @@ export class HierarchyRenderer {
         );
 
         return searchContainer;
+    }
+
+    private createSelectAllButton(
+        hierarchyLevel: HierarchyViewLevel,
+        selection: HierarchySelection,
+        getSearchTerm: () => string,
+        onSelectNodes:
+            (nodes: HierarchyNode[]) => void
+    ): HTMLButtonElement {
+        const button =
+            document.createElement("button");
+
+        button.className =
+            "hierarchy-level__select-all";
+
+        button.type = "button";
+
+        button.addEventListener(
+            "click",
+            () => {
+                const actionableNodes =
+                    this.getBulkSelectionNodes(
+                        hierarchyLevel,
+                        selection,
+                        getSearchTerm()
+                    );
+
+                if (actionableNodes.length > 0) {
+                    onSelectNodes(
+                        actionableNodes
+                    );
+                }
+            }
+        );
+
+        return button;
+    }
+
+    private updateSelectAllButton(
+        button: HTMLButtonElement,
+        hierarchyLevel: HierarchyViewLevel,
+        selection: HierarchySelection,
+        searchTerm: string
+    ): void {
+        const normalizedSearchTerm =
+            searchTerm.trim();
+
+        const candidates =
+            this.getBulkSelectionCandidates(
+                hierarchyLevel,
+                searchTerm
+            );
+
+        const actionableNodes =
+            this.getBulkSelectionNodes(
+                hierarchyLevel,
+                selection,
+                searchTerm
+            );
+
+        const isSearchActive =
+            normalizedSearchTerm.length > 0;
+
+        button.textContent =
+            isSearchActive
+                ? "Select matches"
+                : "Select all";
+
+        const candidateDescription =
+            isSearchActive
+                ? `matching ${hierarchyLevel.name} values`
+                : `compatible ${hierarchyLevel.name} values`;
+
+        if (candidates.length === 0) {
+            button.disabled = true;
+            button.title =
+                `No ${candidateDescription} to select`;
+
+            button.setAttribute(
+                "aria-label",
+                button.title
+            );
+
+            return;
+        }
+
+        if (actionableNodes.length === 0) {
+            button.disabled = true;
+            button.title =
+                `All ${candidateDescription} are already included`;
+
+            button.setAttribute(
+                "aria-label",
+                button.title
+            );
+
+            return;
+        }
+
+        button.disabled = false;
+
+        button.title =
+            `Select ${actionableNodes.length} ${candidateDescription}`;
+
+        button.setAttribute(
+            "aria-label",
+            button.title
+        );
+    }
+
+    private getBulkSelectionNodes(
+        hierarchyLevel: HierarchyViewLevel,
+        selection: HierarchySelection,
+        searchTerm: string
+    ): HierarchyNode[] {
+        return this.getBulkSelectionCandidates(
+            hierarchyLevel,
+            searchTerm
+        ).filter(
+            (node) => {
+                const selectionState =
+                    selection.getSelectionState(
+                        node
+                    );
+
+                return (
+                    selectionState ===
+                        HierarchySelectionState
+                            .Unselected ||
+                    selectionState ===
+                        HierarchySelectionState
+                            .Partial
+                );
+            }
+        );
+    }
+
+    private getBulkSelectionCandidates(
+        hierarchyLevel: HierarchyViewLevel,
+        searchTerm: string
+    ): HierarchyNode[] {
+        const normalizedSearchTerm =
+            searchTerm
+                .trim()
+                .toLocaleLowerCase();
+
+        if (normalizedSearchTerm.length > 0) {
+            return hierarchyLevel.nodes.filter(
+                (node) =>
+                    node.value
+                        .toLocaleLowerCase()
+                        .includes(
+                            normalizedSearchTerm
+                        )
+            );
+        }
+
+        return hierarchyLevel.nodes.filter(
+            (node) =>
+                hierarchyLevel
+                    .compatibleNodeKeys
+                    .has(node.key)
+        );
     }
 
     private renderSearchResults(

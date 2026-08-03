@@ -15,6 +15,7 @@ The fields do not need to be configured as a formal Power BI hierarchy.
 
 - Multiple related fields displayed in one selector
 - Single and multiple selection modes
+- Select all compatible or matching values in Multiple mode
 - Space-efficient column layout for dashboard headers
 - Context-aware values across fields
 - Search automatically shown for fields with enough values

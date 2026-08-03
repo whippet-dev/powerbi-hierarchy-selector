@@ -33,12 +33,22 @@ class SelectionCardSettings extends FormattingSettingsCard {
             value: true
         });
 
+    public showSelectAll =
+        new formattingSettings.ToggleSwitch({
+            name: "showSelectAll",
+            displayName: "Show Select all",
+            description:
+                "Show or hide Select all and Select matches controls in Multiple mode.",
+            value: true
+        });
+
     public name: string = "selection";
     public displayName: string = "Selection";
 
     public slices: FormattingSettingsSlice[] = [
         this.mode,
-        this.showIncludedCounts
+        this.showIncludedCounts,
+        this.showSelectAll
     ];
 }
 
