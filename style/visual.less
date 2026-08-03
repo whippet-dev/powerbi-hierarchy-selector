@@ -362,6 +362,10 @@
     line-height: 1.2;
     text-align: left;
     cursor: pointer;
+    transition:
+        background-color 120ms ease,
+        box-shadow 120ms ease,
+        opacity 120ms ease;
 }
 
 .hierarchy-level__value-indicator {
@@ -413,6 +417,15 @@
             --hierarchy-selected-background,
             #e1dfdd
         );
+    box-shadow:
+        inset 0 0 0 999px
+        rgba(0, 0, 0, 0.07);
+}
+
+.hierarchy-level__value--selected:active {
+    box-shadow:
+        inset 0 0 0 999px
+        rgba(0, 0, 0, 0.11);
 }
 
 .hierarchy-level__value--partial {
