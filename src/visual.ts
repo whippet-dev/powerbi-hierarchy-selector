@@ -67,6 +67,47 @@ export class Visual implements IVisual {
         null |
         undefined;
 
+    private lastPointerDownTime = 0;
+
+    private readonly handlePointerDown =
+        (): void => {
+            this.lastPointerDownTime =
+                performance.now();
+        };
+
+    private readonly handleWindowFocus =
+        (): void => {
+            window.requestAnimationFrame(
+                () => {
+                    const pointerEntry =
+                        performance.now() -
+                        this.lastPointerDownTime <
+                        250;
+
+                    if (pointerEntry) {
+                        return;
+                    }
+
+                    const activeElement =
+                        document.activeElement;
+
+                    const focusIsInsideVisual =
+                        activeElement instanceof
+                            HTMLElement &&
+                        this.container.contains(
+                            activeElement
+                        );
+
+                    if (focusIsInsideVisual) {
+                        return;
+                    }
+
+                    this.renderer
+                        .focusFirstInteractiveControl();
+                }
+            );
+        };
+
     public constructor(options: VisualConstructorOptions) {
         this.container = document.createElement("div");
         this.container.className = "hierarchy-selector";
@@ -96,6 +137,17 @@ export class Visual implements IVisual {
             this.container,
             options.host.tooltipService,
             options.element
+        );
+
+        document.addEventListener(
+            "pointerdown",
+            this.handlePointerDown,
+            true
+        );
+
+        window.addEventListener(
+            "focus",
+            this.handleWindowFocus
         );
 
         this.filterService =
@@ -263,6 +315,19 @@ export class Visual implements IVisual {
         }
 
         this.render();
+    }
+
+    public destroy(): void {
+        document.removeEventListener(
+            "pointerdown",
+            this.handlePointerDown,
+            true
+        );
+
+        window.removeEventListener(
+            "focus",
+            this.handleWindowFocus
+        );
     }
 
     public getFormattingModel():

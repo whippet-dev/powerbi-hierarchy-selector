@@ -42,6 +42,15 @@ export class HierarchyRenderer {
             target: HTMLElement
         ) => void) | undefined;
 
+    private readonly activeValueNodeKeys =
+        new Map<number, string>();
+
+    private pendingValueFocus:
+        {
+            levelIndex: number;
+            nodeKey: string;
+        } | undefined;
+
     public constructor(
         private readonly container: HTMLDivElement,
         private readonly tooltipService:
@@ -58,6 +67,47 @@ export class HierarchyRenderer {
         levelIndex: number
     ): void {
         this.searchTerms.delete(levelIndex);
+    }
+
+    public focusFirstInteractiveControl():
+        boolean {
+        const selectors = [
+            ".hierarchy-level__search-input:not(:disabled)",
+            ".hierarchy-level__select-all:not(:disabled)",
+            "button.hierarchy-level__value[tabindex=\"0\"]:not(:disabled)",
+            ".hierarchy-level__clear:not(:disabled)",
+            ".hierarchy-selector__clear-all:not(:disabled)"
+        ];
+
+        for (const selector of selectors) {
+            const focusTarget =
+                this.container
+                    .querySelector<HTMLElement>(
+                        selector
+                    );
+
+            if (
+                !focusTarget ||
+                focusTarget.getClientRects()
+                    .length === 0
+            ) {
+                continue;
+            }
+
+            focusTarget.focus();
+
+            focusTarget.scrollIntoView({
+                block: "nearest",
+                inline: "nearest"
+            });
+
+            return (
+                document.activeElement ===
+                focusTarget
+            );
+        }
+
+        return false;
     }
 
     public render(
@@ -86,6 +136,8 @@ export class HierarchyRenderer {
         this.onNodeContextMenu =
             onNodeContextMenu;
 
+        this.captureFocusedValue();
+
         this.hideTooltip();
         this.descriptionId = 0;
 
@@ -102,6 +154,10 @@ export class HierarchyRenderer {
             hierarchyLevels.length
         );
 
+
+        this.pruneActiveValueNodeKeys(
+            hierarchyLevels.length
+        );
         if (!showSearchBoxes) {
             this.searchTerms.clear();
         }
@@ -141,6 +197,9 @@ export class HierarchyRenderer {
 
             levelElement.className =
                 "hierarchy-level";
+
+            levelElement.dataset.levelIndex =
+                levelIndex.toString();
 
             const header =
                 document.createElement("div");
@@ -305,6 +364,16 @@ export class HierarchyRenderer {
             valuesContainer.className =
                 "hierarchy-level__values";
 
+            valuesContainer.setAttribute(
+                "role",
+                "group"
+            );
+
+            valuesContainer.setAttribute(
+                "aria-label",
+                `${hierarchyLevel.name} values`
+            );
+
             if (
                 hierarchyLevel.nodes.length === 0
             ) {
@@ -414,6 +483,11 @@ export class HierarchyRenderer {
                                 searchTerm
                             );
                         }
+
+                        this.initializeLevelKeyboardNavigation(
+                            valuesContainer,
+                            levelIndex
+                        );
                     };
 
                 if (shouldShowSearch) {
@@ -481,10 +555,15 @@ export class HierarchyRenderer {
         this.container.appendChild(
             levelsContainer
         );
+
+        this.restoreFocusedValue();
+
     }
 
     public renderLandingPage(): void {
         this.hideTooltip();
+        this.activeValueNodeKeys.clear();
+        this.pendingValueFocus = undefined;
         this.searchTerms.clear();
         this.container.replaceChildren();
 
@@ -962,6 +1041,7 @@ export class HierarchyRenderer {
         button.dataset.nodeKey = node.key;
         button.dataset.level =
             node.level.toString();
+        button.tabIndex = -1;
 
         if (
             selectionState !==
@@ -1152,6 +1232,23 @@ export class HierarchyRenderer {
         );
 
         button.addEventListener(
+            "focus",
+            () =>
+                this.activateValueButton(
+                    button
+                )
+        );
+
+        button.addEventListener(
+            "keydown",
+            (event) =>
+                this.handleValueButtonKeydown(
+                    event,
+                    button
+                )
+        );
+
+        button.addEventListener(
             "contextmenu",
             (event) => {
                 event.preventDefault();
@@ -1175,6 +1272,362 @@ export class HierarchyRenderer {
         );
 
         return button;
+    }
+
+    private captureFocusedValue(): void {
+        this.pendingValueFocus = undefined;
+
+        const activeElement =
+            document.activeElement;
+
+        if (
+            !(
+                activeElement instanceof
+                HTMLButtonElement
+            ) ||
+            !this.container.contains(
+                activeElement
+            ) ||
+            !activeElement.classList.contains(
+                "hierarchy-level__value"
+            )
+        ) {
+            return;
+        }
+
+        const nodeKey =
+            activeElement.dataset.nodeKey;
+
+        const levelIndex =
+            Number(
+                activeElement.dataset.level
+            );
+
+        if (
+            nodeKey === undefined ||
+            !Number.isInteger(levelIndex)
+        ) {
+            return;
+        }
+
+        this.activeValueNodeKeys.set(
+            levelIndex,
+            nodeKey
+        );
+
+        this.pendingValueFocus = {
+            levelIndex,
+            nodeKey
+        };
+    }
+
+    private initializeLevelKeyboardNavigation(
+        valuesContainer: HTMLElement,
+        levelIndex: number
+    ): void {
+        const valueButtons =
+            this.getValueButtons(
+                valuesContainer
+            );
+
+        if (valueButtons.length === 0) {
+            this.activeValueNodeKeys.delete(
+                levelIndex
+            );
+            return;
+        }
+
+        const activeNodeKey =
+            this.activeValueNodeKeys.get(
+                levelIndex
+            );
+
+        let activeButton =
+            activeNodeKey === undefined
+                ? undefined
+                : valueButtons.find(
+                    (button) =>
+                        button.dataset.nodeKey ===
+                        activeNodeKey
+                );
+
+        activeButton ??=
+            valueButtons.find(
+                (button) =>
+                    button.classList.contains(
+                        "hierarchy-level__value--selected"
+                    )
+            );
+
+        activeButton ??=
+            valueButtons.find(
+                (button) =>
+                    button.getAttribute(
+                        "aria-pressed"
+                    ) === "mixed"
+            );
+
+        activeButton ??= valueButtons[0];
+
+        for (
+            const valueButton of
+            valueButtons
+        ) {
+            valueButton.tabIndex =
+                valueButton === activeButton
+                    ? 0
+                    : -1;
+        }
+
+        const nodeKey =
+            activeButton.dataset.nodeKey;
+
+        if (nodeKey !== undefined) {
+            this.activeValueNodeKeys.set(
+                levelIndex,
+                nodeKey
+            );
+        }
+    }
+
+    private activateValueButton(
+        button: HTMLButtonElement
+    ): void {
+        const valuesContainer =
+            button.closest<HTMLElement>(
+                ".hierarchy-level__values"
+            );
+
+        if (!valuesContainer) {
+            return;
+        }
+
+        const valueButtons =
+            this.getValueButtons(
+                valuesContainer
+            );
+
+        for (
+            const valueButton of
+            valueButtons
+        ) {
+            valueButton.tabIndex =
+                valueButton === button
+                    ? 0
+                    : -1;
+        }
+
+        const nodeKey =
+            button.dataset.nodeKey;
+
+        const levelIndex =
+            Number(button.dataset.level);
+
+        if (
+            nodeKey !== undefined &&
+            Number.isInteger(levelIndex)
+        ) {
+            this.activeValueNodeKeys.set(
+                levelIndex,
+                nodeKey
+            );
+        }
+    }
+
+    private handleValueButtonKeydown(
+        event: KeyboardEvent,
+        button: HTMLButtonElement
+    ): void {
+        if (
+            event.key !== "ArrowDown" &&
+            event.key !== "ArrowUp" &&
+            event.key !== "Home" &&
+            event.key !== "End"
+        ) {
+            return;
+        }
+
+        const valuesContainer =
+            button.closest<HTMLElement>(
+                ".hierarchy-level__values"
+            );
+
+        if (!valuesContainer) {
+            return;
+        }
+
+        const valueButtons =
+            this.getValueButtons(
+                valuesContainer
+            );
+
+        const currentIndex =
+            valueButtons.indexOf(button);
+
+        if (currentIndex < 0) {
+            return;
+        }
+
+        let targetIndex =
+            currentIndex;
+
+        switch (event.key) {
+            case "ArrowDown":
+                targetIndex = Math.min(
+                    currentIndex + 1,
+                    valueButtons.length - 1
+                );
+                break;
+
+            case "ArrowUp":
+                targetIndex = Math.max(
+                    currentIndex - 1,
+                    0
+                );
+                break;
+
+            case "Home":
+                targetIndex = 0;
+                break;
+
+            case "End":
+                targetIndex =
+                    valueButtons.length - 1;
+                break;
+        }
+
+        event.preventDefault();
+        event.stopPropagation();
+
+        const targetButton =
+            valueButtons[targetIndex];
+
+        this.activateValueButton(
+            targetButton
+        );
+
+        targetButton.focus();
+
+        targetButton.scrollIntoView({
+            block: "nearest",
+            inline: "nearest"
+        });
+    }
+
+    private restoreFocusedValue(): void {
+        const pendingValueFocus =
+            this.pendingValueFocus;
+
+        this.pendingValueFocus = undefined;
+
+        if (!pendingValueFocus) {
+            return;
+        }
+
+        const levelElement =
+            Array.from(
+                this.container
+                    .querySelectorAll<HTMLElement>(
+                        ".hierarchy-level"
+                    )
+            ).find(
+                (element) =>
+                    element.dataset.levelIndex ===
+                    pendingValueFocus
+                        .levelIndex
+                        .toString()
+            );
+
+        if (!levelElement) {
+            return;
+        }
+
+        const valueButtons =
+            this.getValueButtons(
+                levelElement
+            );
+
+        const exactButton =
+            valueButtons.find(
+                (button) =>
+                    button.dataset.nodeKey ===
+                    pendingValueFocus.nodeKey
+            );
+
+        const fallbackButton =
+            valueButtons.find(
+                (button) =>
+                    button.tabIndex === 0
+            );
+
+        const focusTarget =
+            exactButton ??
+            fallbackButton ??
+            levelElement.querySelector<
+                HTMLInputElement
+            >(
+                ".hierarchy-level__search-input"
+            ) ??
+            levelElement.querySelector<
+                HTMLButtonElement
+            >(
+                ".hierarchy-level__select-all"
+            ) ??
+            levelElement.querySelector<
+                HTMLButtonElement
+            >(
+                ".hierarchy-level__clear"
+            );
+
+        if (!focusTarget) {
+            return;
+        }
+
+        if (
+            focusTarget instanceof
+            HTMLButtonElement &&
+            focusTarget.classList.contains(
+                "hierarchy-level__value"
+            )
+        ) {
+            this.activateValueButton(
+                focusTarget
+            );
+        }
+
+        focusTarget.focus();
+
+        focusTarget.scrollIntoView({
+            block: "nearest",
+            inline: "nearest"
+        });
+    }
+
+    private getValueButtons(
+        container: HTMLElement
+    ): HTMLButtonElement[] {
+        return Array.from(
+            container.querySelectorAll<
+                HTMLButtonElement
+            >(
+                "button.hierarchy-level__value"
+            )
+        );
+    }
+
+    private pruneActiveValueNodeKeys(
+        levelCount: number
+    ): void {
+        for (
+            const levelIndex of
+            this.activeValueNodeKeys.keys()
+        ) {
+            if (levelIndex >= levelCount) {
+                this.activeValueNodeKeys.delete(
+                    levelIndex
+                );
+            }
+        }
     }
 
     private getNodePath(

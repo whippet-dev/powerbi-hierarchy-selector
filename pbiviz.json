@@ -4,7 +4,7 @@
         "displayName": "Multi-Field Selector",
         "guid": "hierarchySelector91C06B93F80548E6A8D87B1480DF361C",
         "visualClassName": "Visual",
-        "version": "1.1.0.0",
+        "version": "1.1.0.2",
         "description": "Select and filter across multiple related fields in one visual.",
         "supportUrl": "https://github.com/whippet-dev/powerbi-multi-field-selector",
         "gitHubUrl": "https://github.com/whippet-dev/powerbi-multi-field-selector"
@@ -22,5 +22,5 @@
     "capabilities": "capabilities.json",
     "dependencies": null,
     "stringResources": [],
-    "version": "1.1.0.0"
+    "version": "1.1.0.2"
 }
