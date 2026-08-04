@@ -20,22 +20,22 @@ import {
 import { HierarchyView } from "./view/HierarchyView";
 
 import VisualConstructorOptions =
-    powerbi.extensibility.visual.VisualConstructorOptions;
+powerbi.extensibility.visual.VisualConstructorOptions;
 
 import VisualUpdateOptions =
-    powerbi.extensibility.visual.VisualUpdateOptions;
+powerbi.extensibility.visual.VisualUpdateOptions;
 
 import VisualUpdateType =
-    powerbi.VisualUpdateType;
+powerbi.VisualUpdateType;
 
 import IVisual =
-    powerbi.extensibility.visual.IVisual;
+powerbi.extensibility.visual.IVisual;
 
 import DataViewMatrix =
-    powerbi.DataViewMatrix;
+powerbi.DataViewMatrix;
 
 import CustomVisualOpaqueIdentity =
-    powerbi.visuals.CustomVisualOpaqueIdentity;
+powerbi.visuals.CustomVisualOpaqueIdentity;
 
 export class Visual implements IVisual {
     private readonly container: HTMLDivElement;
@@ -146,9 +146,9 @@ export class Visual implements IVisual {
         const blankValueLabel =
             typeof configuredBlankValueLabel ===
                 "string" &&
-            configuredBlankValueLabel
-                .trim()
-                .length > 0
+                configuredBlankValueLabel
+                    .trim()
+                    .length > 0
                 ? configuredBlankValueLabel.trim()
                 : "(No value)";
 
@@ -272,6 +272,7 @@ export class Visual implements IVisual {
     }
 
     private handleClearAll(): void {
+        this.renderer.clearSearchTerms();
         this.selection.clear();
         this.applyCurrentSelection();
     }
@@ -279,6 +280,8 @@ export class Visual implements IVisual {
     private handleLevelClear(
         levelIndex: number
     ): void {
+        this.renderer.clearSearchTerm(levelIndex);
+
         this.selection.clearFromLevel(
             levelIndex,
             this.hierarchyLevels
@@ -360,13 +363,29 @@ export class Visual implements IVisual {
         this.setCssVariable(
             "--hierarchy-value-font-family",
             values.fontFamily.value ||
-                "Arial, sans-serif"
+            "Arial, sans-serif"
         );
 
         this.setCssVariable(
             "--hierarchy-value-font-size",
             `${valueFontSize}px`
         );
+
+        this.container.classList.toggle(
+            "hierarchy-selector--wrap-value-labels",
+            values.wrapValueLabels.value
+        );
+
+        this.setCssVariable(
+            "--hierarchy-value-max-lines",
+            this.clampNumber(
+                values.maximumLabelLines.value,
+                2,
+                5
+            ).toString()
+        );
+
+
 
         this.setCssVariable(
             "--hierarchy-value-height",
@@ -454,7 +473,7 @@ export class Visual implements IVisual {
         this.setCssVariable(
             "--hierarchy-heading-font-family",
             headings.fontFamily.value ||
-                "Arial, sans-serif"
+            "Arial, sans-serif"
         );
 
         this.setCssVariable(
@@ -606,7 +625,7 @@ export class Visual implements IVisual {
 
         const valueSortOrder =
             sortOrderValue === "Ascending" ||
-            sortOrderValue === "Descending"
+                sortOrderValue === "Descending"
                 ? sortOrderValue
                 : "Data";
 

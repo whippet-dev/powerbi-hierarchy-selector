@@ -102,6 +102,34 @@ class ValuesCardSettings extends FormattingSettingsCard {
             }
         });
 
+    public wrapValueLabels =
+        new formattingSettings.ToggleSwitch({
+            name: "wrapValueLabels",
+            displayName: "Wrap value labels",
+            description:
+                "Allow long value labels to wrap onto multiple lines.",
+            value: false
+        });
+    public maximumLabelLines =
+        new formattingSettings.NumUpDown({
+            name: "maximumLabelLines",
+            displayName: "Maximum label lines",
+            description:
+                "Set the maximum number of lines used when value-label wrapping is enabled.",
+            value: 2,
+            options: {
+                minValue: {
+                    type:
+                        powerbi.visuals.ValidatorType.Min,
+                    value: 2
+                },
+                maxValue: {
+                    type:
+                        powerbi.visuals.ValidatorType.Max,
+                    value: 5
+                }
+            }
+        });
     public buttonHeight =
         new formattingSettings.NumUpDown({
             name: "buttonHeight",
@@ -173,6 +201,8 @@ class ValuesCardSettings extends FormattingSettingsCard {
         this.sortOrder,
         this.fontFamily,
         this.fontSize,
+        this.wrapValueLabels,
+        this.maximumLabelLines,
         this.buttonHeight,
         this.buttonRadius,
         this.buttonGap

@@ -47,8 +47,6 @@
                         "bool": true
                     }
                 }
-
-
             }
         },
         "values": {
@@ -93,6 +91,18 @@
                         "formatting": {
                             "fontSize": true
                         }
+                    }
+                },
+                "wrapValueLabels": {
+                    "displayName": "Wrap value labels",
+                    "type": {
+                        "bool": true
+                    }
+                },
+                "maximumLabelLines": {
+                    "displayName": "Maximum label lines",
+                    "type": {
+                        "numeric": true
                     }
                 },
                 "buttonHeight": {

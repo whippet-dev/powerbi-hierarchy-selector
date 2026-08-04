@@ -13,10 +13,10 @@ import type {
 } from "../view/HierarchyView";
 
 import ITooltipService =
-    powerbi.extensibility.ITooltipService;
+powerbi.extensibility.ITooltipService;
 
 import VisualTooltipDataItem =
-    powerbi.extensibility.VisualTooltipDataItem;
+powerbi.extensibility.VisualTooltipDataItem;
 
 export class HierarchyRenderer {
     private readonly searchTerms =
@@ -41,10 +41,16 @@ export class HierarchyRenderer {
             ITooltipService,
         private readonly tooltipRoot:
             HTMLElement
-    ) {}
+    ) { }
 
     public clearSearchTerms(): void {
         this.searchTerms.clear();
+    }
+
+    public clearSearchTerm(
+        levelIndex: number
+    ): void {
+        this.searchTerms.delete(levelIndex);
     }
 
     public render(
@@ -107,7 +113,7 @@ export class HierarchyRenderer {
             const shouldShowSearch =
                 showSearchBoxes &&
                 hierarchyLevel.nodes.length >=
-                    minimumValuesForSearch;
+                minimumValuesForSearch;
 
             if (!shouldShowSearch) {
                 this.searchTerms.delete(
@@ -214,8 +220,8 @@ export class HierarchyRenderer {
 
                 const accessibleLabel =
                     selectedPathNodes.length === 1
-                        ? `Clear ${hierarchyLevel.name} selection`
-                        : `Clear ${hierarchyLevel.name} selections`;
+                        ? `Clear ${hierarchyLevel.name} selection and search`
+                        : `Clear ${hierarchyLevel.name} selections and search`;
 
                 clearLevelButton.className =
                     "hierarchy-level__clear";
@@ -261,11 +267,11 @@ export class HierarchyRenderer {
                     "Clear all";
 
                 clearAllButton.title =
-                    "Clear all field selections";
+                    "Clear all selections and searches";
 
                 clearAllButton.setAttribute(
                     "aria-label",
-                    "Clear all field selections"
+                    "Clear all selections and searches"
                 );
 
                 clearAllButton.addEventListener(
@@ -706,16 +712,16 @@ export class HierarchyRenderer {
 
                 return (
                     selectionState ===
-                        HierarchySelectionState
-                            .Unselected ||
+                    HierarchySelectionState
+                        .Unselected ||
                     selectionState ===
-                        HierarchySelectionState
-                            .Partial ||
+                    HierarchySelectionState
+                        .Partial ||
                     (
                         isSearchActive &&
                         selectionState ===
-                            HierarchySelectionState
-                                .Inherited
+                        HierarchySelectionState
+                            .Inherited
                     )
                 );
             }
@@ -1070,7 +1076,7 @@ export class HierarchyRenderer {
             default: {
                 const accessibleLabel =
                     isAlternative &&
-                    !multipleSelectionEnabled
+                        !multipleSelectionEnabled
                         ? `Switch selection path to ${node.value}`
                         : `Select ${node.value}`;
 
@@ -1341,11 +1347,11 @@ export class HierarchyRenderer {
 
         return [
             elementBounds.left -
-                rootBounds.left +
-                elementBounds.width / 2,
+            rootBounds.left +
+            elementBounds.width / 2,
             elementBounds.top -
-                rootBounds.top +
-                elementBounds.height / 2
+            rootBounds.top +
+            elementBounds.height / 2
         ];
     }
 

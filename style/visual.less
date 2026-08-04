@@ -384,6 +384,18 @@
     white-space: nowrap;
 }
 
+.hierarchy-selector--wrap-value-labels
+    .hierarchy-level__value-label {
+    display: -webkit-box;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    text-overflow: clip;
+    white-space: normal;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp:
+        var(--hierarchy-value-max-lines, 2);
+}
+
 .hierarchy-level__value:hover {
     background:
         var(
