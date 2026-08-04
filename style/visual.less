@@ -17,6 +17,19 @@
         );
 }
 
+.hierarchy-selector--high-contrast {
+    color:
+        var(
+            --hierarchy-value-text,
+            CanvasText
+        );
+    background:
+        var(
+            --hierarchy-container-background,
+            Canvas
+        );
+}
+
 .hierarchy-selector__clear-all {
     box-sizing: border-box;
     min-height: 22px;
@@ -52,9 +65,8 @@
 }
 
 .hierarchy-selector__clear-all:focus-visible {
-    outline: none;
-    border-color: currentColor;
-    box-shadow: none;
+    outline: 2px solid currentColor;
+    outline-offset: 1px;
 }
 
 .hierarchy-selector__levels {
@@ -174,9 +186,8 @@
 }
 
 .hierarchy-level__clear:focus-visible {
-    outline: none;
-    border-color: currentColor;
-    box-shadow: none;
+    outline: 2px solid currentColor;
+    outline-offset: 1px;
 }
 
 .hierarchy-level__values {
@@ -274,9 +285,8 @@
 }
 
 .hierarchy-level__search-input:focus-visible {
-    outline: none;
-    border-color: currentColor;
-    box-shadow: none;
+    outline: 2px solid currentColor;
+    outline-offset: 1px;
 }
 
 .hierarchy-level__select-all {
@@ -322,9 +332,8 @@
 }
 
 .hierarchy-level__select-all:focus-visible {
-    outline: none;
-    border-color: currentColor;
-    box-shadow: none;
+    outline: 2px solid currentColor;
+    outline-offset: 1px;
 }
 
 .hierarchy-level__scroll {
@@ -520,9 +529,8 @@
 }
 
 .hierarchy-level__value:focus-visible {
-    outline: none;
-    border-color: currentColor;
-    box-shadow: none;
+    outline: 2px solid currentColor;
+    outline-offset: 1px;
 }
 
 .hierarchy-level__empty,
@@ -562,6 +570,211 @@
     line-height: 18px;
 }
 
+.hierarchy-selector--high-contrast
+    .hierarchy-level__search-input,
+.hierarchy-selector--high-contrast
+    .hierarchy-level__select-all,
+.hierarchy-selector--high-contrast
+    .hierarchy-level__value {
+    border-color:
+        var(
+            --hierarchy-border-colour,
+            CanvasText
+        );
+    background:
+        var(
+            --hierarchy-container-background,
+            Canvas
+        );
+    color:
+        var(
+            --hierarchy-value-text,
+            CanvasText
+        );
+}
+
+.hierarchy-selector--high-contrast
+    .hierarchy-level__search-input::placeholder {
+    color:
+        var(
+            --hierarchy-value-text,
+            CanvasText
+        );
+    opacity: 1;
+}
+
+.hierarchy-selector--high-contrast
+    .hierarchy-level__value:hover:not(
+        .hierarchy-level__value--selected
+    ),
+.hierarchy-selector--high-contrast
+    .hierarchy-level__select-all:hover:not(:disabled),
+.hierarchy-selector--high-contrast
+    .hierarchy-level__clear:hover,
+.hierarchy-selector--high-contrast
+    .hierarchy-selector__clear-all:hover {
+    border-color:
+        var(
+            --hierarchy-selected-background,
+            Highlight
+        );
+    background:
+        var(
+            --hierarchy-container-background,
+            Canvas
+        );
+    color:
+        var(
+            --hierarchy-selected-background,
+            Highlight
+        );
+    box-shadow:
+        inset 0 0 0 1px
+        var(
+            --hierarchy-selected-background,
+            Highlight
+        );
+}
+
+.hierarchy-selector--high-contrast
+    .hierarchy-level__value--alternative:hover {
+    opacity: 1;
+}
+
+.hierarchy-selector--high-contrast
+    .hierarchy-level__value--selected,
+.hierarchy-selector--high-contrast
+    .hierarchy-level__value--selected:active {
+    border-color:
+        var(
+            --hierarchy-border-colour,
+            CanvasText
+        );
+    background:
+        var(
+            --hierarchy-selected-background,
+            Highlight
+        );
+    color:
+        var(
+            --hierarchy-selected-text,
+            HighlightText
+        );
+    box-shadow: none;
+}
+
+.hierarchy-selector--high-contrast
+    .hierarchy-level__value--selected:hover {
+    border-color:
+        var(
+            --hierarchy-container-background,
+            Canvas
+        );
+    box-shadow:
+        inset 0 0 0 1px
+        var(
+            --hierarchy-container-background,
+            Canvas
+        );
+}
+
+.hierarchy-selector--high-contrast
+    .hierarchy-selector__clear-all:focus-visible,
+.hierarchy-selector--high-contrast
+    .hierarchy-level__clear:focus-visible,
+.hierarchy-selector--high-contrast
+    .hierarchy-level__search-input:focus-visible,
+.hierarchy-selector--high-contrast
+    .hierarchy-level__select-all:focus-visible,
+.hierarchy-selector--high-contrast
+    .hierarchy-level__value:focus-visible {
+    outline: none;
+    border-color:
+        var(
+            --hierarchy-selected-background,
+            Highlight
+        );
+    box-shadow:
+        inset 0 0 0 2px
+        var(
+            --hierarchy-selected-background,
+            Highlight
+        );
+}
+
+.hierarchy-selector--high-contrast
+    .hierarchy-level__value:focus-visible {
+    color:
+        var(
+            --hierarchy-selected-background,
+            Highlight
+        );
+    opacity: 1;
+}
+
+.hierarchy-selector--high-contrast
+    .hierarchy-level__value--selected:focus-visible {
+    border-color:
+        var(
+            --hierarchy-container-background,
+            Canvas
+        );
+    color:
+        var(
+            --hierarchy-selected-text,
+            HighlightText
+        );
+    box-shadow:
+        inset 0 0 0 2px
+        var(
+            --hierarchy-container-background,
+            Canvas
+        );
+}
+
+.hierarchy-selector--high-contrast
+    .hierarchy-level__value--partial {
+    border-color:
+        var(
+            --hierarchy-border-colour,
+            CanvasText
+        );
+    color:
+        var(
+            --hierarchy-value-text,
+            CanvasText
+        );
+}
+
+.hierarchy-selector--high-contrast
+    .hierarchy-level__value--inherited {
+    color:
+        var(
+            --hierarchy-value-text,
+            CanvasText
+        );
+    box-shadow:
+        inset 3px 0 0
+        var(
+            --hierarchy-selected-background,
+            Highlight
+        );
+}
+
+.hierarchy-selector--high-contrast
+    .hierarchy-level__alternative-divider {
+    background:
+        var(
+            --hierarchy-border-colour,
+            CanvasText
+        );
+}
+
+.hierarchy-selector--high-contrast
+    .hierarchy-level__select-all:disabled {
+    opacity: 0.65;
+}
+
 .hierarchy-level__value-description {
     position: absolute;
     width: 1px;
@@ -573,16 +786,3 @@
     white-space: nowrap;
     border: 0;
 }
-
-@media (forced-colors: active) {
-    .hierarchy-selector__clear-all:focus-visible,
-    .hierarchy-level__clear:focus-visible,
-    .hierarchy-level__search-input:focus-visible,
-    .hierarchy-level__select-all:focus-visible,
-    .hierarchy-level__value:focus-visible {
-        outline: 2px solid CanvasText;
-        outline-offset: -2px;
-        border-color: ButtonText;
-    }
-}
-

@@ -153,6 +153,9 @@ A zero-valued fact remains distinct from a blank measure or a missing fact row.
 - Keyboard-focusable buttons, searches and controls
 - Native Power BI context menus for hierarchy values and empty visual space
 - Optional value-label wrapping
+- Screen-reader-friendly labels and hierarchy path descriptions
+- Accessible keyboard navigation with roving focus and focus restoration
+- Power BI high-contrast theme support
 
 ## Deferred enhancements
 

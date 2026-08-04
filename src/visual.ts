@@ -57,6 +57,18 @@ export class Visual implements IVisual {
     private readonly formattingSettingsService:
         FormattingSettingsService;
 
+    private readonly isHighContrast:
+        boolean;
+
+    private readonly highContrastForeground:
+        string;
+
+    private readonly highContrastBackground:
+        string;
+
+    private readonly highContrastForegroundSelected:
+        string;
+
     private formattingSettings:
         VisualFormattingSettingsModel;
 
@@ -67,52 +79,33 @@ export class Visual implements IVisual {
         null |
         undefined;
 
-    private lastPointerDownTime = 0;
-
-    private readonly handlePointerDown =
-        (): void => {
-            this.lastPointerDownTime =
-                performance.now();
-        };
-
-    private readonly handleWindowFocus =
-        (): void => {
-            window.requestAnimationFrame(
-                () => {
-                    const pointerEntry =
-                        performance.now() -
-                        this.lastPointerDownTime <
-                        250;
-
-                    if (pointerEntry) {
-                        return;
-                    }
-
-                    const activeElement =
-                        document.activeElement;
-
-                    const focusIsInsideVisual =
-                        activeElement instanceof
-                            HTMLElement &&
-                        this.container.contains(
-                            activeElement
-                        );
-
-                    if (focusIsInsideVisual) {
-                        return;
-                    }
-
-                    this.renderer
-                        .focusFirstInteractiveControl();
-                }
-            );
-        };
-
     public constructor(options: VisualConstructorOptions) {
         this.container = document.createElement("div");
         this.container.className = "hierarchy-selector";
 
         options.element.appendChild(this.container);
+
+        const colourPalette =
+            options.host.colorPalette;
+
+        this.isHighContrast =
+            colourPalette.isHighContrast;
+
+        this.highContrastForeground =
+            colourPalette.foreground.value;
+
+        this.highContrastBackground =
+            colourPalette.background.value;
+
+        this.highContrastForegroundSelected =
+            colourPalette
+                .foregroundSelected
+                .value;
+
+        this.container.classList.toggle(
+            "hierarchy-selector--high-contrast",
+            this.isHighContrast
+        );
 
         this.selectionManager =
             options.host.createSelectionManager();
@@ -137,17 +130,6 @@ export class Visual implements IVisual {
             this.container,
             options.host.tooltipService,
             options.element
-        );
-
-        document.addEventListener(
-            "pointerdown",
-            this.handlePointerDown,
-            true
-        );
-
-        window.addEventListener(
-            "focus",
-            this.handleWindowFocus
         );
 
         this.filterService =
@@ -315,19 +297,6 @@ export class Visual implements IVisual {
         }
 
         this.render();
-    }
-
-    public destroy(): void {
-        document.removeEventListener(
-            "pointerdown",
-            this.handlePointerDown,
-            true
-        );
-
-        window.removeEventListener(
-            "focus",
-            this.handleWindowFocus
-        );
     }
 
     public getFormattingModel():
@@ -763,6 +732,71 @@ export class Visual implements IVisual {
             )}px`
         );
 
+        if (this.isHighContrast) {
+            this.applyHighContrastFormatting();
+        }
+    }
+
+    private applyHighContrastFormatting(): void {
+        this.setCssVariable(
+            "--hierarchy-value-text",
+            this.highContrastForeground
+        );
+
+        this.setCssVariable(
+            "--hierarchy-heading-text",
+            this.highContrastForeground
+        );
+
+        this.setCssVariable(
+            "--hierarchy-clear-text",
+            this.highContrastForeground
+        );
+
+        this.setCssVariable(
+            "--hierarchy-border-colour",
+            this.highContrastForeground
+        );
+
+        this.setCssVariable(
+            "--hierarchy-container-background",
+            this.highContrastBackground
+        );
+
+        this.setCssVariable(
+            "--hierarchy-hover-background",
+            this.highContrastBackground
+        );
+
+        this.setCssVariable(
+            "--hierarchy-clear-hover-background",
+            this.highContrastBackground
+        );
+
+        this.setCssVariable(
+            "--hierarchy-selected-background",
+            this.highContrastForegroundSelected
+        );
+
+        this.setCssVariable(
+            "--hierarchy-selected-text",
+            this.highContrastBackground
+        );
+
+        this.setCssVariable(
+            "--hierarchy-alternative-text",
+            this.highContrastForeground
+        );
+
+        this.setCssVariable(
+            "--hierarchy-alternative-opacity",
+            "0.65"
+        );
+
+        this.setCssVariable(
+            "--hierarchy-container-border-width",
+            "1px"
+        );
     }
 
     private render(): void {
