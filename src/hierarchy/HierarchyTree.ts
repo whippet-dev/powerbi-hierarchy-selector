@@ -78,15 +78,6 @@ export class HierarchyTree {
             visitNode(rootNode);
         }
 
-        for (const level of levels) {
-            level.nodes.sort(
-                (first, second) =>
-                    first.value.localeCompare(
-                        second.value
-                    )
-            );
-        }
-
         return levels;
     }
 
