@@ -12,12 +12,22 @@ import DataViewMatrix =
 import DataViewMatrixNode =
     powerbi.DataViewMatrixNode;
 
+import DataViewHierarchyLevel =
+    powerbi.DataViewHierarchyLevel;
+
 import PrimitiveValue =
     powerbi.PrimitiveValue;
+
+import IVisualHost =
+    powerbi.extensibility.visual.IVisualHost;
 
 export class HierarchyTree {
     private static readonly defaultBlankLabel =
         "(No value)";
+
+    public constructor(
+        private readonly host: IVisualHost
+    ) { }
 
     public build(
         matrix: DataViewMatrix,
@@ -34,7 +44,8 @@ export class HierarchyTree {
             matrix.rows.root.children ?? [],
             null,
             [],
-            displayBlankLabel
+            displayBlankLabel,
+            matrix.rows.levels
         );
     }
 
@@ -83,7 +94,8 @@ export class HierarchyTree {
         matrixNodes: DataViewMatrixNode[],
         parentNode: HierarchyNode | null,
         parentPathParts: string[],
-        blankLabel: string
+        blankLabel: string,
+        matrixLevels: DataViewHierarchyLevel[]
     ): HierarchyNode[] {
         const hierarchyNodes: HierarchyNode[] = [];
         const siblingKeyCounts =
@@ -109,6 +121,15 @@ export class HierarchyTree {
             if (identity === undefined) {
                 continue;
             }
+
+            const selectionId =
+                this.host
+                    .createSelectionIdBuilder()
+                    .withMatrixNode(
+                        matrixNode,
+                        matrixLevels
+                    )
+                    .createSelectionId();
 
             const level =
                 matrixNode.level ??
@@ -147,6 +168,7 @@ export class HierarchyTree {
                 value,
                 rawValue,
                 identity,
+                selectionId,
                 level,
                 parent: parentNode,
                 children: []
@@ -156,7 +178,8 @@ export class HierarchyTree {
                 matrixNode.children ?? [],
                 node,
                 pathParts,
-                blankLabel
+                blankLabel,
+                matrixLevels
             );
 
             hierarchyNodes.push(node);

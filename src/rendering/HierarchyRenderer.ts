@@ -35,6 +35,13 @@ export class HierarchyRenderer {
 
     private showTooltipOnKeyboardFocus = true;
 
+    private onNodeContextMenu:
+        ((
+            node: HierarchyNode,
+            event: MouseEvent,
+            target: HTMLElement
+        ) => void) | undefined;
+
     public constructor(
         private readonly container: HTMLDivElement,
         private readonly tooltipService:
@@ -57,6 +64,11 @@ export class HierarchyRenderer {
         hierarchyLevels: HierarchyViewLevel[],
         selection: HierarchySelection,
         onNodeSelection: (node: HierarchyNode) => void,
+        onNodeContextMenu: (
+            node: HierarchyNode,
+            event: MouseEvent,
+            target: HTMLElement
+        ) => void,
         onSelectNodes: (nodes: HierarchyNode[]) => void,
         onClearAll: () => void,
         onLevelClear: (levelIndex: number) => void,
@@ -71,6 +83,9 @@ export class HierarchyRenderer {
         showTooltipSelectionState: boolean,
         showTooltipOnKeyboardFocus: boolean
     ): void {
+        this.onNodeContextMenu =
+            onNodeContextMenu;
+
         this.hideTooltip();
         this.descriptionId = 0;
 
@@ -1134,6 +1149,21 @@ export class HierarchyRenderer {
         this.attachTooltip(
             button,
             tooltipData
+        );
+
+        button.addEventListener(
+            "contextmenu",
+            (event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                this.hideTooltip();
+
+                this.onNodeContextMenu?.(
+                    node,
+                    event,
+                    button
+                );
+            }
         );
 
         button.addEventListener(

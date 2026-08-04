@@ -8,11 +8,15 @@ import PrimitiveValue =
 import CustomVisualOpaqueIdentity =
     powerbi.visuals.CustomVisualOpaqueIdentity;
 
+import ISelectionId =
+    powerbi.visuals.ISelectionId;
+
 export interface HierarchyNode {
     key: string;
     value: string;
     rawValue: PrimitiveValue;
     identity: CustomVisualOpaqueIdentity;
+    selectionId: ISelectionId;
     level: number;
     parent: HierarchyNode | null;
     children: HierarchyNode[];

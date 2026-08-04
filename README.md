@@ -151,6 +151,8 @@ A zero-valued fact remains distinct from a blank measure or a missing fact row.
 - Power BI **Show items with no data** support
 - Configurable fonts, colours, spacing and field containers
 - Keyboard-focusable buttons, searches and controls
+- Native Power BI context menus for hierarchy values and empty visual space
+- Optional value-label wrapping
 
 ## Deferred enhancements
 
@@ -159,7 +161,6 @@ Potential future improvements include:
 - optional value-label wrapping;
 - an optional apply/batch-selection mode if real reports expose expensive
   recalculation;
-- context-menu integration;
 - further accessibility and high-contrast testing;
 - Microsoft certification.
 

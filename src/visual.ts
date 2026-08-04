@@ -31,6 +31,12 @@ powerbi.VisualUpdateType;
 import IVisual =
 powerbi.extensibility.visual.IVisual;
 
+import ISelectionManager =
+    powerbi.extensibility.ISelectionManager;
+
+import ISelectionId =
+    powerbi.visuals.ISelectionId;
+
 import DataViewMatrix =
 powerbi.DataViewMatrix;
 
@@ -44,6 +50,10 @@ export class Visual implements IVisual {
     private readonly hierarchyView: HierarchyView;
     private readonly renderer: HierarchyRenderer;
     private readonly filterService: HierarchyFilterService;
+    private readonly selectionManager:
+        ISelectionManager;
+    private readonly emptySelectionId:
+        ISelectionId;
     private readonly formattingSettingsService:
         FormattingSettingsService;
 
@@ -63,7 +73,22 @@ export class Visual implements IVisual {
 
         options.element.appendChild(this.container);
 
-        this.hierarchyTree = new HierarchyTree();
+        this.selectionManager =
+            options.host.createSelectionManager();
+
+        this.emptySelectionId =
+            options.host
+                .createSelectionIdBuilder()
+                .createSelectionId();
+
+        this.container.addEventListener(
+            "contextmenu",
+            (event) =>
+                this.handleEmptyContextMenu(event)
+        );
+
+        this.hierarchyTree =
+            new HierarchyTree(options.host);
         this.selection = new HierarchySelection();
         this.hierarchyView = new HierarchyView();
 
@@ -270,6 +295,71 @@ export class Visual implements IVisual {
 
         this.applyCurrentSelection();
     }
+    private handleNodeContextMenu(
+        node: HierarchyNode,
+        event: MouseEvent,
+        target: HTMLElement
+    ): void {
+        event.preventDefault();
+        event.stopPropagation();
+
+        void this.selectionManager
+            .showContextMenu(
+                node.selectionId,
+                this.getContextMenuPosition(
+                    event,
+                    target
+                )
+            );
+    }
+
+    private handleEmptyContextMenu(
+        event: MouseEvent
+    ): void {
+        event.preventDefault();
+
+        const target =
+            event.target instanceof HTMLElement
+                ? event.target
+                : this.container;
+
+        void this.selectionManager
+            .showContextMenu(
+                this.emptySelectionId,
+                this.getContextMenuPosition(
+                    event,
+                    target
+                )
+            );
+    }
+
+    private getContextMenuPosition(
+        event: MouseEvent,
+        target: HTMLElement
+    ): { x: number; y: number } {
+        if (
+            event.clientX !== 0 ||
+            event.clientY !== 0
+        ) {
+            return {
+                x: event.clientX,
+                y: event.clientY
+            };
+        }
+
+        const targetBounds =
+            target.getBoundingClientRect();
+
+        return {
+            x:
+                targetBounds.left +
+                targetBounds.width / 2,
+            y:
+                targetBounds.top +
+                targetBounds.height / 2
+        };
+    }
+
 
     private handleClearAll(): void {
         this.renderer.clearSearchTerms();
@@ -634,6 +724,16 @@ export class Visual implements IVisual {
             this.selection,
             (node) =>
                 this.handleNodeSelection(node),
+            (
+                node,
+                event,
+                target
+            ) =>
+                this.handleNodeContextMenu(
+                    node,
+                    event,
+                    target
+                ),
             (nodes) =>
                 this.handleSelectNodes(nodes),
             () =>
