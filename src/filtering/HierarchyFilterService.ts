@@ -115,9 +115,9 @@ export class HierarchyFilterService {
         );
     }
 
-    public readLegacySelectedValues(
+    public readSelectedValuePaths(
         filters: powerbi.IFilter[] | undefined
-    ): PrimitiveValueType[] | null {
+    ): PrimitiveValueType[][] | null {
         if (!filters || filters.length === 0) {
             return null;
         }
@@ -131,13 +131,13 @@ export class HierarchyFilterService {
                 filter.filterType ===
                 FilterType.Tuple
             ) {
-                const tupleValues =
-                    this.tryReadLegacyTupleFilter(
+                const tuplePaths =
+                    this.tryReadTupleFilter(
                         filter
                     );
 
-                if (tupleValues !== null) {
-                    return tupleValues;
+                if (tuplePaths !== null) {
+                    return tuplePaths;
                 }
             }
 
@@ -145,13 +145,13 @@ export class HierarchyFilterService {
                 filter.filterType ===
                 FilterType.Basic
             ) {
-                const basicValues =
-                    this.tryReadLegacyBasicFilter(
+                const basicPaths =
+                    this.tryReadBasicFilter(
                         filter
                     );
 
-                if (basicValues !== null) {
-                    return basicValues;
+                if (basicPaths !== null) {
+                    return basicPaths;
                 }
             }
         }
@@ -395,9 +395,9 @@ export class HierarchyFilterService {
         return path;
     }
 
-    private tryReadLegacyTupleFilter(
+    private tryReadTupleFilter(
         value: Record<string, unknown>
-    ): PrimitiveValueType[] | null {
+    ): PrimitiveValueType[][] | null {
         if (
             value.operator !== "In" ||
             !Array.isArray(value.values)
@@ -405,53 +405,74 @@ export class HierarchyFilterService {
             return null;
         }
 
-        const firstTuple = value.values[0];
+        const selectedPaths:
+            PrimitiveValueType[][] = [];
 
-        if (!Array.isArray(firstTuple)) {
+        for (const tuple of value.values) {
+            if (
+                !Array.isArray(tuple) ||
+                tuple.length === 0
+            ) {
+                return null;
+            }
+
+            const selectedPath:
+                PrimitiveValueType[] = [];
+
+            for (const element of tuple) {
+                if (
+                    !this.isRecord(element) ||
+                    !this.isTuplePrimitive(
+                        element.value
+                    )
+                ) {
+                    return null;
+                }
+
+                selectedPath.push(
+                    element.value
+                );
+            }
+
+            selectedPaths.push(
+                selectedPath
+            );
+        }
+
+        return selectedPaths.length > 0
+            ? selectedPaths
+            : null;
+    }
+
+    private tryReadBasicFilter(
+        value: Record<string, unknown>
+    ): PrimitiveValueType[][] | null {
+        if (
+            value.operator !== "In" ||
+            !Array.isArray(value.values)
+        ) {
             return null;
         }
 
-        const selectedValues:
-            PrimitiveValueType[] = [];
+        const selectedPaths:
+            PrimitiveValueType[][] = [];
 
-        for (const element of firstTuple) {
+        for (const selectedValue of value.values) {
             if (
-                !this.isRecord(element) ||
                 !this.isTuplePrimitive(
-                    element.value
+                    selectedValue
                 )
             ) {
                 return null;
             }
 
-            selectedValues.push(
-                element.value
+            selectedPaths.push(
+                [selectedValue]
             );
         }
 
-        return selectedValues.length > 0
-            ? selectedValues
-            : null;
-    }
-
-    private tryReadLegacyBasicFilter(
-        value: Record<string, unknown>
-    ): PrimitiveValueType[] | null {
-        if (
-            value.operator !== "In" ||
-            !Array.isArray(value.values) ||
-            value.values.length !== 1
-        ) {
-            return null;
-        }
-
-        const selectedValue =
-            value.values[0];
-
-        return this.isTuplePrimitive(
-            selectedValue
-        )
-            ? [selectedValue]
+        return selectedPaths.length > 0
+            ? selectedPaths
             : null;
     }
 

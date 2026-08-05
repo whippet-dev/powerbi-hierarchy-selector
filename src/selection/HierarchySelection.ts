@@ -341,64 +341,63 @@ export class HierarchySelection {
         selectedValues:
             PrimitiveValueType[] | null
     ): void {
-        this.clear();
+        this.synchronizeFromValuePaths(
+            levels,
+            selectedValues === null
+                ? null
+                : [selectedValues]
+        );
+    }
 
+    public synchronizeFromValuePaths(
+        levels: HierarchyLevel[],
+        selectedValuePaths:
+            PrimitiveValueType[][] | null
+    ): void {
+        this.setEndpoints(
+            this.resolveValuePaths(
+                levels,
+                selectedValuePaths
+            ),
+            levels
+        );
+    }
+
+    public resolveValuePaths(
+        levels: HierarchyLevel[],
+        selectedValuePaths:
+            PrimitiveValueType[][] | null
+    ): HierarchyNode[] {
         if (
-            selectedValues === null ||
-            selectedValues.length === 0 ||
-            selectedValues.length > levels.length
+            selectedValuePaths === null ||
+            selectedValuePaths.length === 0
         ) {
-            return;
+            return [];
         }
 
-        let selectedParent:
-            HierarchyNode | null = null;
-
-        let deepestSelectedNode:
-            HierarchyNode | null = null;
+        const resolvedEndpoints:
+            HierarchyNode[] = [];
 
         for (
-            let levelIndex = 0;
-            levelIndex < selectedValues.length;
-            levelIndex++
+            const selectedValues of
+            selectedValuePaths
         ) {
-            const selectedValue =
-                selectedValues[levelIndex];
-
-            const selectedNode =
-                levels[levelIndex]?.nodes.find(
-                    (node) => {
-                        const parentMatches =
-                            levelIndex === 0
-                                ? node.parent === null
-                                : node.parent?.key ===
-                                    selectedParent?.key;
-
-                        return (
-                            parentMatches &&
-                            this.nodeMatchesValue(
-                                node,
-                                selectedValue
-                            )
-                        );
-                    }
+            const endpoint =
+                this.resolveValuePath(
+                    levels,
+                    selectedValues
                 );
 
-            if (!selectedNode) {
-                this.clear();
-                return;
+            if (endpoint) {
+                resolvedEndpoints.push(
+                    endpoint
+                );
             }
-
-            selectedParent = selectedNode;
-            deepestSelectedNode = selectedNode;
         }
 
-        if (deepestSelectedNode) {
-            this.setEndpoints(
-                [deepestSelectedNode],
-                levels
-            );
-        }
+        return this.normalizeEndpoints(
+            resolvedEndpoints
+        );
     }
 
     public removeInvalidSelections(
@@ -734,17 +733,112 @@ export class HierarchySelection {
         return false;
     }
 
+    private resolveValuePath(
+        levels: HierarchyLevel[],
+        selectedValues:
+            PrimitiveValueType[]
+    ): HierarchyNode | null {
+        if (
+            selectedValues.length === 0 ||
+            selectedValues.length >
+                levels.length
+        ) {
+            return null;
+        }
+
+        let selectedParent:
+            HierarchyNode | null = null;
+
+        let deepestSelectedNode:
+            HierarchyNode | null = null;
+
+        for (
+            let levelIndex = 0;
+            levelIndex <
+                selectedValues.length;
+            levelIndex++
+        ) {
+            const selectedValue =
+                selectedValues[levelIndex];
+
+            const selectedNode =
+                levels[levelIndex]?.nodes.find(
+                    (node) => {
+                        const parentMatches =
+                            levelIndex === 0
+                                ? node.parent ===
+                                    null
+                                : node.parent?.key ===
+                                    selectedParent?.key;
+
+                        return (
+                            parentMatches &&
+                            this.nodeMatchesValue(
+                                node,
+                                selectedValue
+                            )
+                        );
+                    }
+                );
+
+            if (!selectedNode) {
+                return null;
+            }
+
+            selectedParent =
+                selectedNode;
+
+            deepestSelectedNode =
+                selectedNode;
+        }
+
+        return deepestSelectedNode;
+    }
+
     private nodeMatchesValue(
         node: HierarchyNode,
         selectedValue: PrimitiveValueType
     ): boolean {
         if (node.rawValue instanceof Date) {
-            return (
+            const selectedText =
+                String(selectedValue);
+
+            if (
                 node.rawValue.toISOString() ===
-                selectedValue
+                selectedText
+            ) {
+                return true;
+            }
+
+            const selectedTimestamp =
+                Date.parse(selectedText);
+
+            return (
+                !Number.isNaN(
+                    selectedTimestamp
+                ) &&
+                node.rawValue.getTime() ===
+                    selectedTimestamp
             );
         }
 
-        return node.rawValue === selectedValue;
+        if (
+            node.rawValue ===
+            selectedValue
+        ) {
+            return true;
+        }
+
+        if (
+            node.rawValue === null ||
+            node.rawValue === undefined
+        ) {
+            return false;
+        }
+
+        return (
+            String(node.rawValue) ===
+            String(selectedValue)
+        );
     }
 }

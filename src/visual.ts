@@ -234,11 +234,32 @@ export class Visual implements IVisual {
             return;
         }
 
-        const restoredNodes =
+        const identityRestoredNodes =
             this.filterService.readSelectedNodes(
                 options.jsonFilters,
                 rootNodes
             );
+
+        const restoredValuePaths =
+            identityRestoredNodes.length === 0
+                ? this.filterService
+                    .readSelectedValuePaths(
+                        options.jsonFilters
+                    )
+                : null;
+
+        const valueRestoredNodes =
+            identityRestoredNodes.length === 0
+                ? this.selection.resolveValuePaths(
+                    this.hierarchyLevels,
+                    restoredValuePaths
+                )
+                : [];
+
+        const restoredNodes =
+            identityRestoredNodes.length > 0
+                ? identityRestoredNodes
+                : valueRestoredNodes;
 
         if (
             this.pendingFilterIdentities !== undefined
@@ -266,21 +287,10 @@ export class Visual implements IVisual {
                     this.hierarchyLevels
                 );
             }
-        } else if (restoredNodes.length > 0) {
+        } else {
             this.selection.synchronizeFromNodes(
                 restoredNodes,
                 this.hierarchyLevels
-            );
-        } else {
-            const legacyFilterValues =
-                this.filterService
-                    .readLegacySelectedValues(
-                        options.jsonFilters
-                    );
-
-            this.selection.synchronizeFromValues(
-                this.hierarchyLevels,
-                legacyFilterValues
             );
         }
 
