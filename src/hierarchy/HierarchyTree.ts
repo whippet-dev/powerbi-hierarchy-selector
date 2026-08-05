@@ -2,6 +2,7 @@
 
 import powerbi from "powerbi-visuals-api";
 import {
+    HierarchyFilterTarget,
     HierarchyLevel,
     HierarchyNode
 } from "../models/hierarchy";
@@ -55,13 +56,21 @@ export class HierarchyTree {
     ): HierarchyLevel[] {
         const levels: HierarchyLevel[] =
             matrix.rows.levels.map(
-                (level, levelIndex) => ({
-                    name:
-                        level.sources?.[0]
-                            ?.displayName ||
-                        `Field ${levelIndex + 1}`,
-                    nodes: []
-                })
+                (level, levelIndex) => {
+                    const source =
+                        level.sources?.[0];
+
+                    return {
+                        name:
+                            source?.displayName ||
+                            `Field ${levelIndex + 1}`,
+                        target:
+                            this.getFilterTarget(
+                                source?.queryName
+                            ),
+                        nodes: []
+                    };
+                }
             );
 
         const visitNode = (
@@ -107,6 +116,7 @@ export class HierarchyTree {
                     rawValue,
                     blankLabel
                 );
+
             const identity = matrixNode.identity;
 
             if (identity === undefined) {
@@ -177,6 +187,70 @@ export class HierarchyTree {
         }
 
         return hierarchyNodes;
+    }
+
+    private getFilterTarget(
+        queryName: string | undefined
+    ): HierarchyFilterTarget | null {
+        if (!queryName) {
+            return null;
+        }
+
+        const separatorIndex =
+            queryName.lastIndexOf(".");
+
+        if (
+            separatorIndex <= 0 ||
+            separatorIndex ===
+                queryName.length - 1
+        ) {
+            return null;
+        }
+
+        const table =
+            this.cleanQueryIdentifier(
+                queryName.slice(
+                    0,
+                    separatorIndex
+                )
+            );
+
+        const column =
+            this.cleanQueryIdentifier(
+                queryName.slice(
+                    separatorIndex + 1
+                )
+            );
+
+        return table && column
+            ? { table, column }
+            : null;
+    }
+
+    private cleanQueryIdentifier(
+        value: string
+    ): string {
+        const trimmedValue = value.trim();
+
+        if (
+            trimmedValue.startsWith("'") &&
+            trimmedValue.endsWith("'")
+        ) {
+            return trimmedValue
+                .slice(1, -1)
+                .replace(/''/g, "'");
+        }
+
+        if (
+            trimmedValue.startsWith("[") &&
+            trimmedValue.endsWith("]")
+        ) {
+            return trimmedValue
+                .slice(1, -1)
+                .replace(/]]/g, "]");
+        }
+
+        return trimmedValue;
     }
 
     private formatHierarchyValue(

@@ -41,6 +41,7 @@ export class HierarchyView {
 
                 return {
                     name: level.name,
+                    target: level.target,
                     nodes: [
                         ...compatibleNodes,
                         ...incompatibleNodes

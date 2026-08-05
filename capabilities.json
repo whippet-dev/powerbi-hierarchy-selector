@@ -17,6 +17,16 @@
                 }
             }
         },
+        "selectionState": {
+            "properties": {
+                "explicitEndpointState": {
+                    "type": {
+                        "text": true
+                    },
+                    "filterState": true
+                }
+            }
+        },
         "selection": {
             "displayName": "Selection",
             "properties": {

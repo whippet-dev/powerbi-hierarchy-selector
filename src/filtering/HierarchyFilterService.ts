@@ -4,11 +4,17 @@ import powerbi from "powerbi-visuals-api";
 import {
     FilterType,
     HierarchyIdentityFilter,
+    IFilterColumnTarget,
     IHierarchyIdentityFilterNode,
-    PrimitiveValueType
+    ITupleFilter,
+    PrimitiveValueType,
+    TupleValueType
 } from "powerbi-models";
 
-import { HierarchyNode } from "../models/hierarchy";
+import {
+    HierarchyLevel,
+    HierarchyNode
+} from "../models/hierarchy";
 
 import CustomVisualOpaqueIdentity =
     powerbi.visuals.CustomVisualOpaqueIdentity;
@@ -18,6 +24,15 @@ import FilterAction =
 
 import IVisualHost =
     powerbi.extensibility.visual.IVisualHost;
+
+export interface HierarchyFilterPlan {
+    filter:
+        powerbi.IFilter |
+        ITupleFilter |
+        null;
+    appliedEndpoints: HierarchyNode[];
+    preserveExplicitSelection: boolean;
+}
 
 export class HierarchyFilterService {
     private static readonly objectName =
@@ -48,12 +63,26 @@ export class HierarchyFilterService {
                 );
     }
 
-    public apply(
-        selectedEndpoints: HierarchyNode[]
-    ): void {
+    public createFilterPlan(
+        selectedEndpoints: HierarchyNode[],
+        levels: HierarchyLevel[]
+    ): HierarchyFilterPlan {
         if (selectedEndpoints.length === 0) {
-            this.clear();
-            return;
+            return {
+                filter: null,
+                appliedEndpoints: [],
+                preserveExplicitSelection: false
+            };
+        }
+
+        const tuplePlan =
+            this.tryCreateMixedDepthTuplePlan(
+                selectedEndpoints,
+                levels
+            );
+
+        if (tuplePlan) {
+            return tuplePlan;
         }
 
         const hierarchyData =
@@ -61,16 +90,25 @@ export class HierarchyFilterService {
                 selectedEndpoints
             );
 
-        const filter =
-            new HierarchyIdentityFilter<
-                CustomVisualOpaqueIdentity
-            >(
-                [],
-                hierarchyData
-            ).toJSON();
+        return {
+            filter:
+                new HierarchyIdentityFilter<
+                    CustomVisualOpaqueIdentity
+                >(
+                    [],
+                    hierarchyData
+                ).toJSON(),
+            appliedEndpoints: selectedEndpoints,
+            preserveExplicitSelection: false
+        };
+    }
 
+    public apply(
+        plan: HierarchyFilterPlan
+    ): void {
         this.host.applyJsonFilter(
-            filter,
+            plan.filter as unknown as
+                powerbi.IFilter | null,
             HierarchyFilterService.objectName,
             HierarchyFilterService.propertyName,
             FilterAction.merge
@@ -223,6 +261,184 @@ export class HierarchyFilterService {
             HierarchyFilterService.propertyName,
             FilterAction.merge
         );
+    }
+
+    private tryCreateMixedDepthTuplePlan(
+        selectedEndpoints: HierarchyNode[],
+        levels: HierarchyLevel[]
+    ): HierarchyFilterPlan | null {
+        if (
+            selectedEndpoints.length < 2 ||
+            new Set(
+                selectedEndpoints.map(
+                    (node) => node.level
+                )
+            ).size < 2 ||
+            levels.length === 0
+        ) {
+            return null;
+        }
+
+        const targets =
+            levels.map(
+                (level) => level.target
+            );
+
+        if (
+            targets.some(
+                (target) => target === null
+            )
+        ) {
+            return null;
+        }
+
+        const deepestLevel =
+            levels.length - 1;
+
+        const appliedEndpoints =
+            this.expandEndpointsToLevel(
+                selectedEndpoints,
+                deepestLevel
+            );
+
+        if (appliedEndpoints === null) {
+            return null;
+        }
+
+        const tupleValues =
+            this.createTupleValues(
+                appliedEndpoints,
+                levels.length
+            );
+
+        if (tupleValues === null) {
+            return null;
+        }
+
+        const filter: ITupleFilter = {
+            $schema:
+                "https://powerbi.com/product/schema#tuple",
+            filterType: FilterType.Tuple,
+            operator: "In",
+            target:
+                targets as IFilterColumnTarget[],
+            values: tupleValues
+        };
+
+        return {
+            filter,
+            appliedEndpoints,
+            preserveExplicitSelection: true
+        };
+    }
+
+    private expandEndpointsToLevel(
+        selectedEndpoints: HierarchyNode[],
+        targetLevel: number
+    ): HierarchyNode[] | null {
+        const expandedByKey =
+            new Map<string, HierarchyNode>();
+
+        for (const endpoint of selectedEndpoints) {
+            const expandedEndpoints =
+                this.collectNodesAtLevel(
+                    endpoint,
+                    targetLevel
+                );
+
+            if (expandedEndpoints.length === 0) {
+                return null;
+            }
+
+            for (
+                const expandedEndpoint of
+                expandedEndpoints
+            ) {
+                expandedByKey.set(
+                    expandedEndpoint.key,
+                    expandedEndpoint
+                );
+            }
+        }
+
+        return Array.from(
+            expandedByKey.values()
+        );
+    }
+
+    private collectNodesAtLevel(
+        node: HierarchyNode,
+        targetLevel: number
+    ): HierarchyNode[] {
+        if (node.level === targetLevel) {
+            return [node];
+        }
+
+        if (
+            node.level > targetLevel ||
+            node.children.length === 0
+        ) {
+            return [];
+        }
+
+        return node.children.flatMap(
+            (child) =>
+                this.collectNodesAtLevel(
+                    child,
+                    targetLevel
+                )
+        );
+    }
+
+    private createTupleValues(
+        endpoints: HierarchyNode[],
+        expectedPathLength: number
+    ): TupleValueType[] | null {
+        const tupleValues:
+            TupleValueType[] = [];
+
+        for (const endpoint of endpoints) {
+            const path =
+                this.getPathToNode(endpoint);
+
+            if (
+                path.length !==
+                expectedPathLength
+            ) {
+                return null;
+            }
+
+            const tuple: TupleValueType = [];
+
+            for (const node of path) {
+                const value =
+                    this.toTuplePrimitive(
+                        node.rawValue
+                    );
+
+                if (value === null) {
+                    return null;
+                }
+
+                tuple.push({ value });
+            }
+
+            tupleValues.push(tuple);
+        }
+
+        return tupleValues;
+    }
+
+    private toTuplePrimitive(
+        value: unknown
+    ): PrimitiveValueType | null {
+        if (value instanceof Date) {
+            return value.toISOString();
+        }
+
+        return this.isTuplePrimitive(value)
+            ? value
+            : null;
     }
 
     private createSelectionTree(

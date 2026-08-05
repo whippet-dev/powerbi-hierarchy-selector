@@ -11,6 +11,11 @@ import CustomVisualOpaqueIdentity =
 import ISelectionId =
     powerbi.visuals.ISelectionId;
 
+export interface HierarchyFilterTarget {
+    table: string;
+    column: string;
+}
+
 export interface HierarchyNode {
     key: string;
     value: string;
@@ -24,5 +29,6 @@ export interface HierarchyNode {
 
 export interface HierarchyLevel {
     name: string;
+    target: HierarchyFilterTarget | null;
     nodes: HierarchyNode[];
 }

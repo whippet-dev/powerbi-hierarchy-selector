@@ -31,11 +31,17 @@ powerbi.VisualUpdateType;
 import IVisual =
 powerbi.extensibility.visual.IVisual;
 
+import IVisualHost =
+powerbi.extensibility.visual.IVisualHost;
+
 import ISelectionManager =
     powerbi.extensibility.ISelectionManager;
 
 import ISelectionId =
     powerbi.visuals.ISelectionId;
+
+import DataView =
+powerbi.DataView;
 
 import DataViewMatrix =
 powerbi.DataViewMatrix;
@@ -43,7 +49,19 @@ powerbi.DataViewMatrix;
 import CustomVisualOpaqueIdentity =
 powerbi.visuals.CustomVisualOpaqueIdentity;
 
+interface PersistedSelectionState {
+    version: number;
+    endpointKeys: string[];
+}
+
 export class Visual implements IVisual {
+    private static readonly selectionStateObjectName =
+        "selectionState";
+
+    private static readonly explicitEndpointStatePropertyName =
+        "explicitEndpointState";
+
+    private readonly host: IVisualHost;
     private readonly container: HTMLDivElement;
     private readonly hierarchyTree: HierarchyTree;
     private readonly selection: HierarchySelection;
@@ -79,7 +97,12 @@ export class Visual implements IVisual {
         null |
         undefined;
 
+    private pendingSelectionShouldBePreserved =
+        false;
+
     public constructor(options: VisualConstructorOptions) {
+        this.host = options.host;
+
         this.container = document.createElement("div");
         this.container.className = "hierarchy-selector";
 
@@ -190,6 +213,8 @@ export class Visual implements IVisual {
         ) {
             this.hierarchyLevels = [];
             this.pendingFilterIdentities = undefined;
+            this.pendingSelectionShouldBePreserved =
+                false;
             this.selection.clear();
 
             this.renderer.renderLandingPage();
@@ -228,6 +253,8 @@ export class Visual implements IVisual {
             this.hierarchyLevels.length === 0
         ) {
             this.pendingFilterIdentities = undefined;
+            this.pendingSelectionShouldBePreserved =
+                false;
             this.selection.clear();
 
             this.renderer.renderLandingPage();
@@ -261,6 +288,14 @@ export class Visual implements IVisual {
                 ? identityRestoredNodes
                 : valueRestoredNodes;
 
+        const persistedExplicitNodes =
+            this.pendingFilterIdentities === undefined
+                ? this.resolvePersistedExplicitSelection(
+                    dataView,
+                    restoredNodes
+                )
+                : null;
+
         if (
             this.pendingFilterIdentities !== undefined
         ) {
@@ -276,20 +311,35 @@ export class Visual implements IVisual {
                         this.pendingFilterIdentities
                     )
             ) {
-                this.pendingFilterIdentities = undefined;
+                const preserveExplicitSelection =
+                    this.pendingSelectionShouldBePreserved;
 
-                this.selection.synchronizeFromNodes(
-                    restoredNodes,
-                    this.hierarchyLevels
-                );
+                this.pendingFilterIdentities = undefined;
+                this.pendingSelectionShouldBePreserved =
+                    false;
+
+                if (preserveExplicitSelection) {
+                    this.selection.removeInvalidSelections(
+                        this.hierarchyLevels
+                    );
+                } else {
+                    this.selection.synchronizeFromNodes(
+                        restoredNodes,
+                        this.hierarchyLevels
+                    );
+                }
             } else {
                 this.selection.removeInvalidSelections(
                     this.hierarchyLevels
                 );
             }
         } else {
+            this.pendingSelectionShouldBePreserved =
+                false;
+
             this.selection.synchronizeFromNodes(
-                restoredNodes,
+                persistedExplicitNodes ??
+                    restoredNodes,
                 this.hierarchyLevels
             );
         }
@@ -430,17 +480,208 @@ export class Visual implements IVisual {
                 this.hierarchyLevels
             );
 
+        const filterPlan =
+            this.filterService.createFilterPlan(
+                selectedEndpoints,
+                this.hierarchyLevels
+            );
+
         this.pendingFilterIdentities =
-            selectedEndpoints.length > 0
-                ? selectedEndpoints.map(
+            filterPlan.appliedEndpoints.length > 0
+                ? filterPlan.appliedEndpoints.map(
                     (node) => node.identity
                 )
                 : null;
 
+        this.pendingSelectionShouldBePreserved =
+            filterPlan.preserveExplicitSelection;
+
+        this.persistExplicitSelectionState(
+            selectedEndpoints,
+            filterPlan.preserveExplicitSelection
+        );
+
         this.render();
 
-        this.filterService.apply(
-            selectedEndpoints
+        this.filterService.apply(filterPlan);
+    }
+
+    private persistExplicitSelectionState(
+        selectedEndpoints: HierarchyNode[],
+        preserveExplicitSelection: boolean
+    ): void {
+        let serializedState = "";
+
+        if (
+            preserveExplicitSelection &&
+            selectedEndpoints.length > 0
+        ) {
+            const persistedState:
+                PersistedSelectionState = {
+                    version: 1,
+                    endpointKeys:
+                        selectedEndpoints.map(
+                            (node) => node.key
+                        )
+                };
+
+            serializedState =
+                JSON.stringify(persistedState);
+        }
+
+        this.host.persistProperties({
+            merge: [
+                {
+                    objectName:
+                        Visual.selectionStateObjectName,
+                    selector: null,
+                    properties: {
+                        [Visual
+                            .explicitEndpointStatePropertyName]:
+                            serializedState
+                    }
+                }
+            ]
+        });
+    }
+
+    private resolvePersistedExplicitSelection(
+        dataView: DataView | undefined,
+        restoredNodes: HierarchyNode[]
+    ): HierarchyNode[] | null {
+        const persistedState =
+            this.readPersistedSelectionState(
+                dataView
+            );
+
+        if (
+            persistedState === null ||
+            restoredNodes.length === 0
+        ) {
+            return null;
+        }
+
+        const nodesByKey =
+            new Map<string, HierarchyNode>();
+
+        for (const level of this.hierarchyLevels) {
+            for (const node of level.nodes) {
+                nodesByKey.set(node.key, node);
+            }
+        }
+
+        const explicitNodes:
+            HierarchyNode[] = [];
+
+        for (
+            const endpointKey of
+            persistedState.endpointKeys
+        ) {
+            const node = nodesByKey.get(
+                endpointKey
+            );
+
+            if (!node) {
+                return null;
+            }
+
+            explicitNodes.push(node);
+        }
+
+        const validationPlan =
+            this.filterService.createFilterPlan(
+                explicitNodes,
+                this.hierarchyLevels
+            );
+
+        if (
+            !validationPlan
+                .preserveExplicitSelection ||
+            !this.nodeCollectionsEqual(
+                validationPlan.appliedEndpoints,
+                restoredNodes
+            )
+        ) {
+            return null;
+        }
+
+        return explicitNodes;
+    }
+
+    private readPersistedSelectionState(
+        dataView: DataView | undefined
+    ): PersistedSelectionState | null {
+        const selectionStateObject =
+            dataView?.metadata.objects?.[
+                Visual.selectionStateObjectName
+            ];
+
+        const serializedState =
+            selectionStateObject?.[
+                Visual
+                    .explicitEndpointStatePropertyName
+            ];
+
+        if (
+            typeof serializedState !== "string" ||
+            serializedState.trim().length === 0
+        ) {
+            return null;
+        }
+
+        try {
+            const parsedState: unknown =
+                JSON.parse(serializedState);
+
+            if (
+                !this.isRecord(parsedState) ||
+                parsedState.version !== 1 ||
+                !Array.isArray(
+                    parsedState.endpointKeys
+                ) ||
+                parsedState.endpointKeys.length === 0 ||
+                parsedState.endpointKeys.some(
+                    (value) =>
+                        typeof value !== "string"
+                )
+            ) {
+                return null;
+            }
+
+            return {
+                version: 1,
+                endpointKeys:
+                    parsedState.endpointKeys as
+                        string[]
+            };
+        } catch {
+            return null;
+        }
+    }
+
+    private nodeCollectionsEqual(
+        first: HierarchyNode[],
+        second: HierarchyNode[]
+    ): boolean {
+        if (first.length !== second.length) {
+            return false;
+        }
+
+        const secondKeys = new Set(
+            second.map((node) => node.key)
+        );
+
+        return first.every(
+            (node) => secondKeys.has(node.key)
+        );
+    }
+
+    private isRecord(
+        value: unknown
+    ): value is Record<string, unknown> {
+        return (
+            typeof value === "object" &&
+            value !== null
         );
     }
 
