@@ -597,6 +597,24 @@ class TooltipCardSettings extends FormattingSettingsCard {
     ];
 }
 
+class HelpCardSettings extends FormattingSettingsCard {
+    public showHelpButton =
+        new formattingSettings.ToggleSwitch({
+            name: "showHelpButton",
+            displayName: "Show help button",
+            description:
+                "Show or hide the help button that explains selection icons and key selector behaviour.",
+            value: true
+        });
+
+    public name: string = "help";
+    public displayName: string = "Help";
+
+    public slices: FormattingSettingsSlice[] = [
+        this.showHelpButton
+    ];
+}
+
 class LayoutCardSettings extends FormattingSettingsCard {
     public visualPadding =
         new formattingSettings.NumUpDown({
@@ -736,6 +754,9 @@ export class VisualFormattingSettingsModel
     public tooltipCard =
         new TooltipCardSettings();
 
+    public helpCard =
+        new HelpCardSettings();
+
     public layoutCard =
         new LayoutCardSettings();
 
@@ -747,6 +768,7 @@ export class VisualFormattingSettingsModel
         this.levelContainersCard,
         this.clearControlsCard,
         this.tooltipCard,
+        this.helpCard,
         this.layoutCard
     ];
 }

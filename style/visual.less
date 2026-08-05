@@ -1,5 +1,6 @@
 .hierarchy-selector {
     box-sizing: border-box;
+    position: relative;
     display: flex;
     width: 100%;
     height: 100%;
@@ -786,3 +787,284 @@
     white-space: nowrap;
     border: 0;
 }
+
+.hierarchy-selector__top-controls {
+    box-sizing: border-box;
+    display: flex;
+    min-height: 24px;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: flex-end;
+    margin-bottom: 4px;
+}
+
+.hierarchy-selector__help-button,
+.hierarchy-selector__help-close {
+    box-sizing: border-box;
+    width: 24px;
+    height: 24px;
+    flex: 0 0 24px;
+    padding: 0;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    background: transparent;
+    color:
+        var(--hierarchy-clear-text, #242424);
+    font-family: Arial, sans-serif;
+    line-height: 1;
+    text-align: center;
+    cursor: pointer;
+}
+
+.hierarchy-selector__help-button {
+    border-color:
+        var(
+            --hierarchy-border-colour,
+            #d1d1d1
+        );
+    border-radius: 50%;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.hierarchy-selector__help-close {
+    font-size: 18px;
+}
+
+.hierarchy-selector__help-button:hover,
+.hierarchy-selector__help-close:hover {
+    background:
+        var(
+            --hierarchy-clear-hover-background,
+            #f0f0f0
+        );
+}
+
+.hierarchy-selector__help-button:focus-visible,
+.hierarchy-selector__help-close:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 1px;
+}
+
+.hierarchy-selector__help-panel {
+    box-sizing: border-box;
+    position: absolute;
+    z-index: 10;
+    top:
+        calc(
+            var(--hierarchy-visual-padding, 6px) +
+            28px
+        );
+    right:
+        var(--hierarchy-visual-padding, 6px);
+    width:
+        min(
+            340px,
+            calc(
+                100% -
+                var(
+                    --hierarchy-visual-padding,
+                    6px
+                ) -
+                var(
+                    --hierarchy-visual-padding,
+                    6px
+                )
+            )
+        );
+    max-height:
+        calc(
+            100% -
+            var(--hierarchy-visual-padding, 6px) -
+            34px
+        );
+    padding: 12px;
+    overflow: auto;
+    border: 1px solid
+        var(
+            --hierarchy-border-colour,
+            #d1d1d1
+        );
+    border-radius: 6px;
+    background: #ffffff;
+    color: #242424;
+    font-family:
+        var(
+            --hierarchy-value-font-family,
+            Arial,
+            sans-serif
+        );
+    font-size: 12px;
+    line-height: 1.4;
+    box-shadow:
+        0 4px 14px
+        rgba(0, 0, 0, 0.18);
+}
+
+.hierarchy-selector__help-panel[hidden] {
+    display: none;
+}
+
+.hierarchy-selector__help-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.hierarchy-selector__help-heading {
+    min-width: 0;
+    flex: 1 1 auto;
+    margin: 0;
+    color: #242424;
+    font-family:
+        var(
+            --hierarchy-heading-font-family,
+            Arial,
+            sans-serif
+        );
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.3;
+}
+
+.hierarchy-selector__help-subheading {
+    margin: 12px 0 5px;
+    color: #242424;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.3;
+}
+
+.hierarchy-selector__help-states {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.hierarchy-selector__help-state {
+    display: grid;
+    grid-template-columns: 20px 1fr;
+    align-items: start;
+    gap: 6px;
+}
+
+.hierarchy-selector__help-state-icon {
+    display: inline-flex;
+    width: 20px;
+    min-height: 20px;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid
+        var(
+            --hierarchy-border-colour,
+            #d1d1d1
+        );
+    border-radius: 4px;
+    background:
+        var(
+            --hierarchy-selected-background,
+            #e1dfdd
+        );
+    color:
+        var(
+            --hierarchy-selected-text,
+            #242424
+        );
+    font-weight: 700;
+    line-height: 1;
+}
+
+.hierarchy-selector__help-note {
+    margin: 7px 0 0;
+}
+
+.hierarchy-selector__help-list {
+    margin: 0;
+    padding-left: 18px;
+}
+
+.hierarchy-selector__help-list li + li {
+    margin-top: 4px;
+}
+
+.hierarchy-selector--high-contrast
+    .hierarchy-selector__help-button,
+.hierarchy-selector--high-contrast
+    .hierarchy-selector__help-close {
+    border-color:
+        var(
+            --hierarchy-border-colour,
+            CanvasText
+        );
+    background:
+        var(
+            --hierarchy-container-background,
+            Canvas
+        );
+    color:
+        var(
+            --hierarchy-value-text,
+            CanvasText
+        );
+}
+
+.hierarchy-selector--high-contrast
+    .hierarchy-selector__help-button:hover,
+.hierarchy-selector--high-contrast
+    .hierarchy-selector__help-close:hover {
+    border-color:
+        var(
+            --hierarchy-selected-background,
+            Highlight
+        );
+}
+
+.hierarchy-selector--high-contrast
+    .hierarchy-selector__help-button:focus-visible,
+.hierarchy-selector--high-contrast
+    .hierarchy-selector__help-close:focus-visible {
+    outline: none;
+    border-color:
+        var(
+            --hierarchy-selected-background,
+            Highlight
+        );
+    box-shadow:
+        inset 0 0 0 2px
+        var(
+            --hierarchy-selected-background,
+            Highlight
+        );
+}
+
+.hierarchy-selector--high-contrast
+    .hierarchy-selector__help-panel {
+    border-color:
+        var(
+            --hierarchy-border-colour,
+            CanvasText
+        );
+    background:
+        var(
+            --hierarchy-container-background,
+            Canvas
+        );
+    color:
+        var(
+            --hierarchy-value-text,
+            CanvasText
+        );
+    box-shadow: none;
+}
+
+.hierarchy-selector--high-contrast
+    .hierarchy-selector__help-heading,
+.hierarchy-selector--high-contrast
+    .hierarchy-selector__help-subheading {
+    color:
+        var(
+            --hierarchy-heading-text,
+            CanvasText
+        );
+}
+

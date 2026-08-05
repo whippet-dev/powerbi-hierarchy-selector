@@ -346,6 +346,17 @@
                 }
             }
         },
+        "help": {
+            "displayName": "Help",
+            "properties": {
+                "showHelpButton": {
+                    "displayName": "Show help button",
+                    "type": {
+                        "bool": true
+                    }
+                }
+            }
+        },
         "layout": {
             "displayName": "Layout",
             "properties": {

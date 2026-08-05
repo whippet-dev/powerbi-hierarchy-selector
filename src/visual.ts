@@ -1131,6 +1131,10 @@ export class Visual implements IVisual {
             this.formattingSettings
                 .tooltipCard
                 .showOnKeyboardFocus
+                .value,
+            this.formattingSettings
+                .helpCard
+                .showHelpButton
                 .value
         );
     }

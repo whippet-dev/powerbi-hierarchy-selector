@@ -19,6 +19,8 @@ import VisualTooltipDataItem =
 powerbi.extensibility.VisualTooltipDataItem;
 
 export class HierarchyRenderer {
+    private static nextInstanceId = 0;
+
     private readonly searchTerms =
         new Map<number, string>();
 
@@ -51,13 +53,34 @@ export class HierarchyRenderer {
             nodeKey: string;
         } | undefined;
 
+    private helpOpen = false;
+
+    private helpButton:
+        HTMLButtonElement | undefined;
+
+    private helpPanel:
+        HTMLElement | undefined;
+
+    private readonly helpPanelId: string;
+
+    private readonly helpHeadingId: string;
+
     public constructor(
         private readonly container: HTMLDivElement,
         private readonly tooltipService:
             ITooltipService,
         private readonly tooltipRoot:
             HTMLElement
-    ) { }
+    ) {
+        const instanceId =
+            ++HierarchyRenderer.nextInstanceId;
+
+        this.helpPanelId =
+            `hierarchy-selector-help-${instanceId}`;
+
+        this.helpHeadingId =
+            `hierarchy-selector-help-heading-${instanceId}`;
+    }
 
     public clearSearchTerms(): void {
         this.searchTerms.clear();
@@ -72,6 +95,7 @@ export class HierarchyRenderer {
     public focusFirstInteractiveControl():
         boolean {
         const selectors = [
+            ".hierarchy-selector__help-button:not(:disabled)",
             ".hierarchy-level__search-input:not(:disabled)",
             ".hierarchy-level__select-all:not(:disabled)",
             "button.hierarchy-level__value[tabindex=\"0\"]:not(:disabled)",
@@ -131,7 +155,8 @@ export class HierarchyRenderer {
         valueSortOrder: string,
         tooltipHoverDelay: number,
         showTooltipSelectionState: boolean,
-        showTooltipOnKeyboardFocus: boolean
+        showTooltipOnKeyboardFocus: boolean,
+        showHelpButton: boolean
     ): void {
         this.onNodeContextMenu =
             onNodeContextMenu;
@@ -163,6 +188,33 @@ export class HierarchyRenderer {
         }
 
         this.container.replaceChildren();
+        this.helpButton = undefined;
+        this.helpPanel = undefined;
+
+        if (!showHelpButton) {
+            this.helpOpen = false;
+        }
+
+        if (showHelpButton) {
+            const topControls =
+                document.createElement("div");
+
+            topControls.className =
+                "hierarchy-selector__top-controls";
+
+            const helpButton =
+                this.createHelpButton();
+
+            this.helpButton = helpButton;
+
+            topControls.appendChild(
+                helpButton
+            );
+
+            this.container.appendChild(
+                topControls
+            );
+        }
 
         const hasSelection =
             selection.hasSelection();
@@ -556,8 +608,359 @@ export class HierarchyRenderer {
             levelsContainer
         );
 
+        if (showHelpButton) {
+            const helpPanel =
+                this.createHelpPanel();
+
+            this.helpPanel = helpPanel;
+
+            this.container.appendChild(
+                helpPanel
+            );
+        }
+
         this.restoreFocusedValue();
 
+    }
+
+    private createHelpButton():
+        HTMLButtonElement {
+        const button =
+            document.createElement("button");
+
+        button.className =
+            "hierarchy-selector__help-button";
+
+        button.type = "button";
+        button.textContent = "?";
+
+        button.setAttribute(
+            "aria-haspopup",
+            "dialog"
+        );
+
+        button.setAttribute(
+            "aria-controls",
+            this.helpPanelId
+        );
+
+        button.setAttribute(
+            "aria-expanded",
+            this.helpOpen.toString()
+        );
+
+        const accessibleLabel =
+            this.helpOpen
+                ? "Close selector help"
+                : "Open selector help";
+
+        button.title = accessibleLabel;
+
+        button.setAttribute(
+            "aria-label",
+            accessibleLabel
+        );
+
+        button.addEventListener(
+            "click",
+            () => {
+                this.setHelpOpen(
+                    !this.helpOpen,
+                    false
+                );
+            }
+        );
+
+        return button;
+    }
+
+    private createHelpPanel(): HTMLElement {
+        const panel =
+            document.createElement("section");
+
+        panel.className =
+            "hierarchy-selector__help-panel";
+
+        panel.id = this.helpPanelId;
+        panel.hidden = !this.helpOpen;
+
+        panel.setAttribute(
+            "role",
+            "dialog"
+        );
+
+        panel.setAttribute(
+            "aria-modal",
+            "false"
+        );
+
+        panel.setAttribute(
+            "aria-labelledby",
+            this.helpHeadingId
+        );
+
+        const header =
+            document.createElement("div");
+
+        header.className =
+            "hierarchy-selector__help-header";
+
+        const heading =
+            document.createElement("h2");
+
+        heading.className =
+            "hierarchy-selector__help-heading";
+
+        heading.id = this.helpHeadingId;
+        heading.textContent =
+            "Using this selector";
+
+        const closeButton =
+            document.createElement("button");
+
+        closeButton.className =
+            "hierarchy-selector__help-close";
+
+        closeButton.type = "button";
+        closeButton.textContent = "×";
+        closeButton.title =
+            "Close selector help";
+
+        closeButton.setAttribute(
+            "aria-label",
+            "Close selector help"
+        );
+
+        closeButton.addEventListener(
+            "click",
+            () =>
+                this.setHelpOpen(
+                    false,
+                    true
+                )
+        );
+
+        header.appendChild(heading);
+        header.appendChild(closeButton);
+        panel.appendChild(header);
+
+        const statesHeading =
+            document.createElement("h3");
+
+        statesHeading.className =
+            "hierarchy-selector__help-subheading";
+
+        statesHeading.textContent =
+            "Selection icons";
+
+        panel.appendChild(statesHeading);
+
+        const states =
+            document.createElement("div");
+
+        states.className =
+            "hierarchy-selector__help-states";
+
+        states.setAttribute(
+            "role",
+            "list"
+        );
+
+        states.appendChild(
+            this.createHelpStateRow(
+                "✓",
+                "Directly selected",
+                "You selected this value."
+            )
+        );
+
+        states.appendChild(
+            this.createHelpStateRow(
+                "↳",
+                "Included",
+                "Included because a parent value is selected."
+            )
+        );
+
+        states.appendChild(
+            this.createHelpStateRow(
+                "−",
+                "Partially selected",
+                "Contains one or more selected values beneath it."
+            )
+        );
+
+        panel.appendChild(states);
+
+        const noIcon =
+            document.createElement("p");
+
+        noIcon.className =
+            "hierarchy-selector__help-note";
+
+        noIcon.textContent =
+            "Values without an icon are not currently selected.";
+
+        panel.appendChild(noIcon);
+
+        const behaviourHeading =
+            document.createElement("h3");
+
+        behaviourHeading.className =
+            "hierarchy-selector__help-subheading";
+
+        behaviourHeading.textContent =
+            "Key behaviour";
+
+        panel.appendChild(
+            behaviourHeading
+        );
+
+        const behaviourList =
+            document.createElement("ul");
+
+        behaviourList.className =
+            "hierarchy-selector__help-list";
+
+        const behaviours = [
+            "Selecting a parent includes all values beneath it.",
+            "In Multiple mode, selections can span different branches.",
+            "Muted values are valid alternatives outside the current selection path.",
+            "Search changes the values shown in one field without changing the current selection.",
+            "Hover over a value, or focus it with the keyboard, to see its full hierarchy path.",
+            "Use × beside a field to clear that field and lower levels. Clear all resets the selector."
+        ];
+
+        for (const behaviour of behaviours) {
+            const item =
+                document.createElement("li");
+
+            item.textContent = behaviour;
+
+            behaviourList.appendChild(
+                item
+            );
+        }
+
+        panel.appendChild(
+            behaviourList
+        );
+
+        panel.addEventListener(
+            "keydown",
+            (event) => {
+                if (event.key !== "Escape") {
+                    return;
+                }
+
+                event.preventDefault();
+                event.stopPropagation();
+
+                this.setHelpOpen(
+                    false,
+                    true
+                );
+            }
+        );
+
+        return panel;
+    }
+
+    private createHelpStateRow(
+        symbol: string,
+        label: string,
+        description: string
+    ): HTMLDivElement {
+        const row =
+            document.createElement("div");
+
+        row.className =
+            "hierarchy-selector__help-state";
+
+        row.setAttribute(
+            "role",
+            "listitem"
+        );
+
+        const indicator =
+            document.createElement("span");
+
+        indicator.className =
+            "hierarchy-selector__help-state-icon";
+
+        indicator.textContent = symbol;
+
+        indicator.setAttribute(
+            "aria-hidden",
+            "true"
+        );
+
+        const text =
+            document.createElement("span");
+
+        const strong =
+            document.createElement("strong");
+
+        strong.textContent = `${label}: `;
+
+        text.appendChild(strong);
+        text.append(description);
+
+        row.appendChild(indicator);
+        row.appendChild(text);
+
+        return row;
+    }
+
+    private setHelpOpen(
+        open: boolean,
+        returnFocus: boolean
+    ): void {
+        if (
+            !this.helpButton ||
+            !this.helpPanel
+        ) {
+            this.helpOpen = false;
+            return;
+        }
+
+        this.hideTooltip();
+        this.helpOpen = open;
+        this.helpPanel.hidden = !open;
+
+        this.helpButton.setAttribute(
+            "aria-expanded",
+            open.toString()
+        );
+
+        const accessibleLabel =
+            open
+                ? "Close selector help"
+                : "Open selector help";
+
+        this.helpButton.title =
+            accessibleLabel;
+
+        this.helpButton.setAttribute(
+            "aria-label",
+            accessibleLabel
+        );
+
+        if (open) {
+            this.helpPanel
+                .querySelector<
+                    HTMLButtonElement
+                >(
+                    ".hierarchy-selector__help-close"
+                )
+                ?.focus();
+
+            return;
+        }
+
+        if (returnFocus) {
+            this.helpButton.focus();
+        }
     }
 
     public renderLandingPage(): void {
@@ -565,6 +968,9 @@ export class HierarchyRenderer {
         this.activeValueNodeKeys.clear();
         this.pendingValueFocus = undefined;
         this.searchTerms.clear();
+        this.helpOpen = false;
+        this.helpButton = undefined;
+        this.helpPanel = undefined;
         this.container.replaceChildren();
 
         const landingPage =
