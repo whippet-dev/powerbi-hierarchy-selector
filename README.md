@@ -198,6 +198,12 @@ so the corresponding `package.json` version is `1.1.0`.
 
 ## Support
 
+See the [support policy](SUPPORT.md) for help, defect reporting and security
+contact details.
+
 Issues and feedback can be raised through the GitHub repository:
 
 https://github.com/whippet-dev/powerbi-multi-field-selector
+
+The visual's handling of report and support data is described in the
+[privacy policy](PRIVACY.md).
