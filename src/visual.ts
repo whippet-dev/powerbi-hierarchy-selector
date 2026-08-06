@@ -34,6 +34,9 @@ powerbi.extensibility.visual.IVisual;
 import IVisualHost =
 powerbi.extensibility.visual.IVisualHost;
 
+import IVisualEventService =
+powerbi.extensibility.IVisualEventService;
+
 import ISelectionManager =
     powerbi.extensibility.ISelectionManager;
 
@@ -62,6 +65,7 @@ export class Visual implements IVisual {
         "explicitEndpointState";
 
     private readonly host: IVisualHost;
+    private readonly events: IVisualEventService;
     private readonly container: HTMLDivElement;
     private readonly hierarchyTree: HierarchyTree;
     private readonly selection: HierarchySelection;
@@ -102,6 +106,7 @@ export class Visual implements IVisual {
 
     public constructor(options: VisualConstructorOptions) {
         this.host = options.host;
+        this.events = options.host.eventService;
 
         this.container = document.createElement("div");
         this.container.className = "hierarchy-selector";
@@ -166,6 +171,27 @@ export class Visual implements IVisual {
     }
 
     public update(options: VisualUpdateOptions): void {
+        this.events.renderingStarted(options);
+
+        try {
+            this.updateVisual(options);
+            this.events.renderingFinished(options);
+        } catch (error) {
+            const failureReason =
+                error instanceof Error
+                    ? error.message
+                    : String(error);
+
+            this.events.renderingFailed(
+                options,
+                failureReason
+            );
+
+            throw error;
+        }
+    }
+
+    private updateVisual(options: VisualUpdateOptions): void {
         this.container.style.width =
             `${options.viewport.width}px`;
 

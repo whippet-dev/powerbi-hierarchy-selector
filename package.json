@@ -8,9 +8,9 @@
   },
   "license": "MIT",
   "scripts": {
-    "start": "npx --yes --package=powerbi-visuals-tools@7.2.1 pbiviz start",
-    "package": "npx --yes --package=powerbi-visuals-tools@7.2.1 pbiviz package",
-    "package:certification": "npx --yes --package=powerbi-visuals-tools@7.2.1 pbiviz package --certification-audit",
+    "start": "pbiviz start",
+    "package": "pbiviz package",
+    "package:certification": "pbiviz package --certification-audit",
     "eslint": "npx eslint . --ext .js,.jsx,.ts,.tsx",
     "lint": "npm run eslint"
   },
@@ -22,6 +22,7 @@
   "devDependencies": {
     "eslint": "^9.11.1",
     "eslint-plugin-powerbi-visuals": "^1.0.0",
+    "powerbi-visuals-tools": "7.2.1",
     "typescript": "5.5.4"
   }
 }
