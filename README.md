@@ -161,11 +161,40 @@ A zero-valued fact remains distinct from a blank measure or a missing fact row.
 
 Potential future improvements include:
 
-- optional value-label wrapping;
 - an optional apply/batch-selection mode if real reports expose expensive
   recalculation;
 - further accessibility and high-contrast testing;
 - Microsoft certification.
+
+## Development checks
+
+Install the project packages once after cloning or changing dependencies:
+
+```text
+npm install
+```
+
+Before sharing or packaging a change, run:
+
+```text
+npm run eslint
+npm run package
+```
+
+For a prospective certification build, use the stricter package audit:
+
+```text
+npm run package:certification
+```
+
+The Power BI build commands are pinned to a known version of
+`powerbi-visuals-tools` so different developers use the same packaging tool.
+
+## Versioning
+
+Power BI visual releases use four-part versions in `pbiviz.json`, for example
+`1.1.0.2`. The npm project metadata uses valid three-part semantic versioning,
+so the corresponding `package.json` version is `1.1.0`.
 
 ## Support
 
