@@ -1,5 +1,6 @@
 {
   "name": "powerbi-multi-field-selector",
+  "version": "1.1.0",
   "description": "A Power BI custom visual for selecting and filtering across multiple related fields.",
   "repository": {
     "type": "git",
@@ -7,20 +8,18 @@
   },
   "license": "MIT",
   "scripts": {
-    "pbiviz": "pbiviz",
-    "start": "pbiviz start",
-    "package": "pbiviz package",
-    "lint": "npx eslint ."
+    "start": "npx --yes --package=powerbi-visuals-tools@7.2.1 pbiviz start",
+    "package": "npx --yes --package=powerbi-visuals-tools@7.2.1 pbiviz package",
+    "package:certification": "npx --yes --package=powerbi-visuals-tools@7.2.1 pbiviz package --certification-audit",
+    "eslint": "npx eslint . --ext .js,.jsx,.ts,.tsx",
+    "lint": "npm run eslint"
   },
   "dependencies": {
-    "@types/d3": "7.4.3",
-    "d3": "7.9.0",
     "powerbi-models": "^2.1.1",
     "powerbi-visuals-api": "^5.11.1",
     "powerbi-visuals-utils-formattingmodel": "6.0.4"
   },
   "devDependencies": {
-    "@typescript-eslint/eslint-plugin": "^8.8.0",
     "eslint": "^9.11.1",
     "eslint-plugin-powerbi-visuals": "^1.0.0",
     "typescript": "5.5.4"

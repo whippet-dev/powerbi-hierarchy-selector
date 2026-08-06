@@ -8,6 +8,10 @@ dist/
 # Generated build reports
 webpack.statistics*.html
 
+# Local tool caches and test output
+.npm-cache/
+coverage/
+
 # Logs
 *.log
 
