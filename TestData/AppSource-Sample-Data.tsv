@@ -1,0 +1,55 @@
+Continent	Country	Region	City	Site	Cases
+Asia	India	Karnataka	Bengaluru	Central	101
+Asia	India	Karnataka	Bengaluru	Bengaluru Site 1	92
+Asia	India	Karnataka	Bengaluru	Main Office	77
+Asia	India	Maharashtra	Mumbai	Central	109
+Asia	India	Maharashtra	Mumbai	Mumbai Site 1	83
+Asia	India	Maharashtra	Mumbai	Riverside	64
+Asia	India	Tamil Nadu	Chennai	Central	74
+Asia	India	Tamil Nadu	Chennai	Harbour	58
+Asia	Japan	Kansai	Osaka	Central	82
+Asia	Japan	Kansai	Osaka	Osaka Site 1	71
+Asia	Japan	Kansai	Osaka	Main Office	67
+Asia	Japan	Kantō	Tokyo	Central	115
+Asia	Japan	Kantō	Tokyo	Tokyo Site 1	98
+Asia	Japan	Kantō	Tokyo	Main Office	88
+Asia	Japan	Chubu	Nagoya	Central	69
+Asia	Japan	Chubu	Nagoya	Riverside	55
+Europe	France	Île-de-France	Paris	Central	83
+Europe	France	Île-de-France	Paris	Paris Site 1	76
+Europe	France	Île-de-France	Paris	Main Office	69
+Europe	France	Occitanie	Toulouse	Central	52
+Europe	France	Occitanie	Toulouse	Toulouse Site 1	61
+Europe	Germany	Bavaria	Munich	Central	91
+Europe	Germany	Bavaria	Munich	Munich Site 1	73
+Europe	Germany	Bavaria	Munich	Main Office	80
+Europe	Germany	Berlin	Berlin	Central	70
+Europe	Germany	Berlin	Berlin	Berlin Site 1	66
+Europe	Germany	Berlin	Berlin	Main Office	75
+Europe	United Kingdom	England	London	Central	120
+Europe	United Kingdom	England	London	London Site 1	112
+Europe	United Kingdom	England	London	London Site 2	98
+Europe	United Kingdom	England	London	Main Office	105
+Europe	United Kingdom	England	Cambridge	Central	79
+Europe	United Kingdom	England	Cambridge	Main Office	68
+Europe	United Kingdom	Scotland	Edinburgh	Central	84
+Europe	United Kingdom	Scotland	Edinburgh	Edinburgh Site 1	72
+Europe	United Kingdom	Scotland	Edinburgh	Riverside	63
+North America	United States	Illinois	Springfield	Central	94
+North America	United States	Illinois	Springfield	Springfield Site 1	87
+North America	United States	Illinois	Springfield	Main Office	99
+North America	United States	Massachusetts	Cambridge	Central	108
+North America	United States	Massachusetts	Cambridge	Cambridge Site 1	96
+North America	United States	Massachusetts	Cambridge	Main Office	102
+North America	United States	Missouri	Springfield	Central	81
+North America	United States	Missouri	Springfield	Springfield Site 1	74
+North America	United States	Missouri	Springfield	Main Office	86
+North America	Canada	Ontario	Toronto	Central	104
+North America	Canada	Ontario	Toronto	Toronto Site 1	93
+North America	Canada	Ontario	Toronto	Main Office	97
+North America	Canada	British Columbia	Vancouver	Central	89
+North America	Canada	British Columbia	Vancouver	Vancouver Site 1	78
+North America	Canada	British Columbia	Vancouver	Harbour	85
+North America	Canada	Quebec	Montreal	Central	90
+North America	Canada	Quebec	Montreal	Montreal Site 1	82
+North America	Canada	Quebec	Montreal	Main Office	88
