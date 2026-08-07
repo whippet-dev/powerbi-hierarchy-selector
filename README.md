@@ -193,8 +193,13 @@ The Power BI build commands are pinned to a known version of
 ## Versioning
 
 Power BI visual releases use four-part versions in `pbiviz.json`, for example
-`1.1.0.2`. The npm project metadata uses valid three-part semantic versioning,
+`1.1.0.3`. The npm project metadata uses valid three-part semantic versioning,
 so the corresponding `package.json` version is `1.1.0`.
+
+The `powerbi-visuals-api` npm package can have a patch release that is newer
+than the Power BI host API contract. For example, npm package `5.11.1` exports
+host API version `5.11.0`, so `pbiviz.json` correctly uses `apiVersion`
+`5.11.0` while the dependency remains on `5.11.1`.
 
 ## Support
 
